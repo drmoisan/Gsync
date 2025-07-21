@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36212.18
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gsync", "Gsync\Gsync.csproj", "{59968129-3DFD-464B-9BA9-BE1DB23BECEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gsync.Test", "Gsync.Test\Gsync.Test.csproj", "{B7FEF13D-3490-47A8-884B-D922BF5353DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{59968129-3DFD-464B-9BA9-BE1DB23BECEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59968129-3DFD-464B-9BA9-BE1DB23BECEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59968129-3DFD-464B-9BA9-BE1DB23BECEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59968129-3DFD-464B-9BA9-BE1DB23BECEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6A21BAB-F1D3-496D-90EE-D3F21A9D7ECC}
+	EndGlobalSection
+EndGlobal
