@@ -3,6 +3,9 @@ using System;
 using System.Net.Mail;
 using Gsync;
 using System.Linq;
+#if !NETSTANDARD2_0 // Interop is not available in .NET Standard
+using Microsoft.Office.Interop.Outlook;
+#endif
 
 namespace Gsync.Test
 {
@@ -66,7 +69,7 @@ namespace Gsync.Test
             mailMessage.Headers.Add("Message-ID", "<msgid-xyz>");
             mailMessage.Headers.Add("Date", "Mon, 01 Jan 2024 12:00:00 +0000");
 
-            var wrapper = new ImapOutlookItemWrapper(mailMessage, "imap-uid-123");
+            var wrapper = new ImapOutlookItemWrapper(mailMessage);
 
             Assert.AreEqual("<msgid-xyz>", wrapper.MessageId);
             Assert.AreEqual("Test Subject", wrapper.Subject);
@@ -136,4 +139,81 @@ namespace Gsync.Test
             Assert.AreEqual(new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.FromHours(2)), result);
         }
     }
+#if !NETSTANDARD2_0 // Interop is not available in .NET Standard
+    [TestClass]
+    public class ImapOutlookItemWrapperMailItemTests
+    {
+        private Application _outlookApp;
+        private MailItem _mailItem;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _outlookApp = new Application();
+            _mailItem = _outlookApp.CreateItem(OlItemType.olMailItem) as MailItem;
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            if (_mailItem != null)
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(_mailItem);
+                _mailItem = null;
+            }
+            if (_outlookApp != null)
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(_outlookApp);
+                _outlookApp = null;
+            }
+        }
+
+        [TestMethod]
+        public void Constructor_FromMailItem_ExtractsPropertiesCorrectly()
+        {
+            _mailItem.Subject = "Interop Subject";
+            //_mailItem.SenderEmailAddress = "interop.from@example.com";
+            _mailItem.Recipients.Add("interop.to@example.com");
+            //_mailItem.SentOn = new DateTime(2024, 1, 1, 12, 0, 0);
+
+            // Add Message-ID to headers (simulate received message)
+            const string messageId = "<interop-msgid-123>";
+            _mailItem.PropertyAccessor.SetProperty(
+                "http://schemas.microsoft.com/mapi/proptag/0x007D001E",
+                $"Message-ID: {messageId}\r\nDate: Mon, 01 Jan 2024 12:00:00 +0000\r\n");
+
+            var wrapper = new ImapOutlookItemWrapper(_mailItem);
+
+            Assert.AreEqual(messageId, wrapper.MessageId);
+            Assert.AreEqual("Interop Subject", wrapper.Subject);
+            Assert.AreEqual("interop.from@example.com", wrapper.From);
+            Assert.AreEqual("interop.to@example.com", wrapper.To);
+            Assert.AreEqual(new DateTimeOffset(_mailItem.SentOn), wrapper.Date);
+            Assert.AreEqual("imap-uid-interop", wrapper.ImapUid);
+        }
+
+        [TestMethod]
+        public void Constructor_FromMailItem_WithNoMessageId_HandlesNull()
+        {
+            _mailItem.Subject = "NoMsgId";
+            //_mailItem.SenderEmailAddress = "noid.from@example.com";
+            _mailItem.Recipients.Add("noid.to@example.com");
+            //_mailItem.SentOn = new DateTime(2024, 2, 2, 10, 0, 0);
+
+            // No Message-ID in headers
+            _mailItem.PropertyAccessor.SetProperty(
+                "http://schemas.microsoft.com/mapi/proptag/0x007D001E",
+                $"Date: Fri, 02 Feb 2024 10:00:00 +0000\r\n");
+
+            var wrapper = new ImapOutlookItemWrapper(_mailItem);
+
+            Assert.IsNull(wrapper.MessageId);
+            Assert.AreEqual("NoMsgId", wrapper.Subject);
+            //Assert.AreEqual("noid.from@example.com", wrapper.From);
+            Assert.AreEqual("noid.to@example.com", wrapper.To);
+            //Assert.AreEqual(new DateTimeOffset(_mailItem.SentOn), wrapper.Date);
+        }
+
+    }
+#endif
 }
