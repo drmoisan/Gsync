@@ -10,12 +10,8 @@ namespace Gsync
     /// </summary>
     public class ImapOutlookItemWrapper : IEquatable<ImapOutlookItemWrapper>
     {
-        public string MessageId { get; }
-        public string Subject { get; }
-        public string From { get; }
-        public string To { get; }
-        public DateTimeOffset Date { get; }
-        public string ImapUid { get; }
+        
+        #region ctor
 
         public ImapOutlookItemWrapper(string messageId, string subject, string from, string to, DateTimeOffset date, string imapUid)
         {
@@ -70,29 +66,22 @@ namespace Gsync
             ImapUid = ExtractImapUidFromMailItem(mailItem);
         }
 
-        // Internal for testability
-        internal ImapOutlookItemWrapper(MailItem mailItem, Func<MailItem, string> senderExtractor)
-        {
-            if (mailItem == null)
-                throw new ArgumentNullException(nameof(mailItem));
+        #endregion ctor
 
-            MessageId = GetMessageIdFromMailItem(mailItem);
-            Subject = mailItem.Subject;
-            From = (senderExtractor ?? GetSenderEmailAddress)(mailItem);
-            To = mailItem.Recipients != null
-                ? string.Join(";", mailItem.Recipients
-                    .Cast<Recipient>()
-                    .Where(r => r != null && !string.IsNullOrEmpty(r.Address))
-                    .Select(r => r.Address))
-                : string.Empty;
-            Date = mailItem.SentOn != null && mailItem.SentOn != DateTime.MinValue
-                ? new DateTimeOffset(mailItem.SentOn)
-                : DateTimeOffset.MinValue;
-            ImapUid = ExtractImapUidFromMailItem(mailItem);
-        }
+        #region Public Properties
+        
+        public string MessageId { get; set; }
+        public string Subject { get; set; }
+        public string From { get; set; }
+        public string To { get; set; }
+        public DateTimeOffset Date { get; set; }
+        public string ImapUid { get; set; }
 
-        // Default sender extraction logic
-        protected virtual string GetSenderEmailAddress(MailItem mailItem)
+        #endregion Public Properties
+
+        #region Data Extraction Methods
+
+        internal virtual string GetSenderEmailAddress(MailItem mailItem)
         {
             return mailItem.SenderEmailAddress;
         }
@@ -133,7 +122,7 @@ namespace Gsync
             return null;
         }
 
-        private static string GetMessageIdFromMailItem(MailItem mailItem)
+        internal string GetMessageIdFromMailItem(MailItem mailItem)
         {
             // PR_TRANSPORT_MESSAGE_HEADERS property tag
             const string PR_TRANSPORT_MESSAGE_HEADERS = "http://schemas.microsoft.com/mapi/proptag/0x007D001E";
@@ -158,12 +147,14 @@ namespace Gsync
             return null;
         }
 
-        private static DateTimeOffset ParseDateHeader(string dateHeader)
+        internal DateTimeOffset ParseDateHeader(string dateHeader)
         {
             if (DateTimeOffset.TryParse(dateHeader, out var result))
                 return result;
             return DateTimeOffset.MinValue;
         }
+
+        #endregion Data Extraction Methods
 
         #region IEquatable<ImapOutlookItemWrapper> Members
 
