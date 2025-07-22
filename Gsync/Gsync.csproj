@@ -188,6 +188,8 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="Utilities\AppGlobals.cs" />
+    <Compile Include="Utilities\DebugTextWriter.cs" />
     <Compile Include="Utilities\ImapOutlookItemWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -203,6 +205,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <None Include="Gsync_TemporaryKey.pfx" />
+    <None Include="log4net.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

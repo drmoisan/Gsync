@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net.Mail;
 using Microsoft.Office.Interop.Outlook;
 
-namespace Gsync
+namespace Gsync.Utilities
 {
     /// <summary>
     /// Wraps an Outlook item using only IMAP-accessible properties.

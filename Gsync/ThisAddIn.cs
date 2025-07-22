@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Linq;
-using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
-using System.Diagnostics.CodeAnalysis;
+using Outlook = Microsoft.Office.Interop.Outlook;
 
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
+[assembly: InternalsVisibleTo("Gsync.Test")]
 namespace Gsync
 {
-    [ExcludeFromCodeCoverage]
+    //[ExcludeFromCodeCoverage]
     public partial class ThisAddIn
     {
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
