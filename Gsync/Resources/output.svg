@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xml="http://www.w3.org/XML/1998/namespace" viewBox="0, 0, 16, 16">
+  <defs>
+    <style>.canvas{fill: none; opacity: 0;}.light-yellow-10{fill: #996f00; opacity: 0.1;}.light-yellow{fill: #996f00; opacity: 1;}</style>
+  </defs>
+  <title>IconLightNewFolder</title>
+  <g id="canvas" opacity="0" class="canvas" style="fill:none;">
+    <path d="M16 16 H0 V0 H16 Z" opacity="0" class="canvas" />
+  </g>
+  <g id="level-1">
+    <path d="M15.5 6.5 v9 H2.5 V8 l0.092 -0.092 A4.525 4.525 0 0 0 3.5 8 A4.487 4.487 0 0 0 7.512 5.5 H8.5 l1 1 Z" opacity="0.1" class="light-yellow-10" style="fill:#996F00;" />
+    <path d="M16 6.5 v9 l-0.5 0.5 H2.5 L2 15.5 V7.724 A4.431 4.431 0 0 0 3 7.95 V15 H15 V7 H9.682 l-0.853 0.854 L8.475 8 H3.5 A4.46 4.46 0 0 0 6.3 7 H8.268 l0.513 -0.512 L8.293 6 H7.24 a4.466 4.466 0 0 0 0.484 -1 H8.5 l0.354 0.146 L9.707 6 H15.5 Z" opacity="1" class="light-yellow" style="fill:#996F00;" />
+    <path d="M3 2 L3 0 H4 L4 2 l-0.5 0.5 Z m0.5 2.5 L3 5 V7 H4 V5 Z m1 -1 L5 4 L7 4 V3 L5 3 Z m-2 0 L2 3 L0 3 V4 L2 4 Z m1.708 -0.7 h0.708 L6.328 1.378 L5.62 0.671 L4.208 2.088 Z M2.792 4.206 H2.085 L0.673 5.623 l0.707 0.706 L2.793 4.913 Z m1.414 0 v0.708 L5.623 6.328 l0.706 -0.708 L4.913 4.208 Z M2.794 2.792 V2.085 L1.378 0.673 L0.671 1.38 L2.088 2.793 Z" opacity="1" class="light-yellow" style="fill:#996F00;" />
+  </g>
+</svg>

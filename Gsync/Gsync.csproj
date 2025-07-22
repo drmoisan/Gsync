@@ -28,6 +28,7 @@
     <AssemblyName>Gsync</AssemblyName>
     <LoadBehavior>3</LoadBehavior>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <DefineConstants>VSTO40;UseOfficeInterop</DefineConstants>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <BootstrapperComponentsLocation>HomeSite</BootstrapperComponentsLocation>
@@ -188,13 +189,88 @@
     can be found.
   -->
   <ItemGroup>
-    <Compile Include="Utilities\AppGlobals.cs" />
-    <Compile Include="Utilities\DebugTextWriter.cs" />
+    <Compile Include="Utilities\AppGlobals\AppFileSystemFolderPaths.cs" />
+    <Compile Include="Utilities\AppGlobals\AppGlobals.cs" />
+    <Compile Include="Utilities\AppGlobals\AppStagingFilenames.cs" />
+    <Compile Include="Utilities\Dialogs\ActionButton.cs" />
+    <Compile Include="Utilities\Dialogs\DelegateButton.cs" />
+    <Compile Include="Utilities\Dialogs\DelegateButtonTemplate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\DelegateButtonTemplate.Designer.cs">
+      <DependentUpon>DelegateButtonTemplate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\FolderNotFoundViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\FolderNotFoundViewer.Designer.cs">
+      <DependentUpon>FolderNotFoundViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\FunctionButton.cs" />
+    <Compile Include="Utilities\Dialogs\InputBox.cs" />
+    <Compile Include="Utilities\Dialogs\InputBoxViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\InputBoxViewer.Designer.cs">
+      <DependentUpon>InputBoxViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\MyBox.cs" />
+    <Compile Include="Utilities\Dialogs\MyBoxViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\MyBoxViewer.Designer.cs">
+      <DependentUpon>MyBoxViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\NotImplementedDialog.cs" />
+    <Compile Include="Utilities\Dialogs\YesNoToAll.cs" />
+    <Compile Include="Utilities\Extensions\ArrayExtensions.cs" />
+    <Compile Include="Utilities\Extensions\JsonSerializerExtensions.cs" />
+    <Compile Include="Utilities\Extensions\LazyExtension.cs" />
+    <Compile Include="Utilities\Extensions\WinFormsExtensions.cs" />
+    <Compile Include="Utilities\HelperClasses\FileSystem\FilePathHelper.cs" />
+    <Compile Include="Utilities\HelperClasses\Logging\TraceUtility.cs" />
+    <Compile Include="Utilities\HelperClasses\SimpleRegex.cs" />
+    <Compile Include="Utilities\HelperClasses\Threading\ThreadSafeSingleShotGuard.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\ISmartSerializableNonTyped.cs" />
+    <Compile Include="Utilities\Interfaces\ITimer\IGenericTimer.cs" />
+    <Compile Include="Utilities\Interfaces\IGlobals\IApplicationGlobals.cs" />
+    <Compile Include="Utilities\HelperClasses\Logging\DebugTextWriter.cs" />
+    <Compile Include="Utilities\Extensions\CompilerServicesExtensions.cs" />
+    <Compile Include="Utilities\Extensions\NullExtensions.cs" />
+    <Compile Include="Utilities\Extensions\TraceExtensions.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\AppGlobalsConverter.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverter.cs" />
     <Compile Include="Utilities\ImapOutlookItemWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Utilities\Interfaces\IGlobals\IAppStagingFilenames.cs" />
+    <Compile Include="Utilities\Interfaces\IGlobals\IFileSystemFolderPaths.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\ISmartSerializable.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\ISmartSerializableConfig.cs" />
+    <Compile Include="Utilities\Interfaces\ITimer\ITimerWrapper.cs" />
     <Compile Include="Utilities\MailMessageChangeTracker.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigController.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigGroupBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigViewer.Designer.cs">
+      <DependentUpon>ConfigViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\NewSmartSerializableConfig.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializable.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableBase.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableLoader.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableNonTyped.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableStatic.cs" />
+    <Compile Include="Utilities\ReusableTypes\TimedActions\TimedAsyncTask.cs" />
+    <Compile Include="Utilities\ReusableTypes\TimedActions\TimedBatchAction.cs" />
+    <Compile Include="Utilities\ReusableTypes\TimedActions\TimedDiskWriter.cs" />
+    <Compile Include="Utilities\ReusableTypes\TimedActions\TimedQueueOfActions.cs" />
+    <Compile Include="Utilities\ReusableTypes\TimedActions\TimerWrapper.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -203,7 +279,24 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Utilities\Dialogs\DelegateButtonTemplate.resx">
+      <DependentUpon>DelegateButtonTemplate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utilities\Dialogs\FolderNotFoundViewer.resx">
+      <DependentUpon>FolderNotFoundViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utilities\Dialogs\InputBoxViewer.resx">
+      <DependentUpon>InputBoxViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utilities\Dialogs\MyBoxViewer.resx">
+      <DependentUpon>MyBoxViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigViewer.resx">
+      <DependentUpon>ConfigViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="app.config" />
     <None Include="Gsync_TemporaryKey.pfx" />
     <None Include="log4net.config" />
     <None Include="Properties\Settings.settings">
@@ -213,6 +306,7 @@
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="ThisAddIn.cs">
       <SubType>Code</SubType>
@@ -233,7 +327,21 @@
       <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\Cancel.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CancelBlue.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CalculationWarning.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SVGControl\SVGControl.csproj">
+      <Project>{d8c1fc62-03e7-4662-a40f-33a3e27accbf}</Project>
+      <Name>SVGControl</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

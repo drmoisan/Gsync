@@ -4,9 +4,9 @@ using System.Net.Mail;
 using Gsync;
 using System.Linq;
 using Gsync.Utilities;
-#if !NETSTANDARD2_0 // Interop is not available in .NET Standard
 using Microsoft.Office.Interop.Outlook;
-#endif
+using Gsync.Utilities.HelperClasses;
+
 
 namespace Gsync.Test
 {
