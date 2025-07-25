@@ -2,9 +2,15 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="TabAddIns">
-        <group id="MyGroup"
-               label="My Group">
+      <tab idMso="Development">
+        <group id="GSyncDev" label="GSync Dev">
+          <button id ="LoopInboxItems"
+                  label="Loop Inbox Items"
+                  size="large"
+                  imageMso="ProtectedActualsSynchronize"
+                  onAction="LoopInboxItems_Click"
+                  screentip="Iterate through each item in each inbox"
+                  supertip="Click to execute GSync development tasks." />
         </group>
       </tab>
     </tabs>

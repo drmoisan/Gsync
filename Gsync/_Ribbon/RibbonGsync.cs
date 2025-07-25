@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Gsync.Ribbon;
+using Gsync.Utilities.Interfaces;
+using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using Office = Microsoft.Office.Core;
 
 // TODO:  Follow these steps to enable the Ribbon (XML) item:
@@ -35,6 +34,18 @@ namespace Gsync
 
         public RibbonGsync() { }
 
+        protected IApplicationGlobals _globals;
+        internal IApplicationGlobals Globals 
+        { 
+            get => _globals;
+            set 
+            { 
+                _globals = value; 
+                Dev = new DevelopmentMethods(_globals);
+            }
+        }
+
+        internal DevelopmentMethods Dev { get; set; }
 
         #region IRibbonExtensibility Members
 
@@ -55,6 +66,12 @@ namespace Gsync
         {
             this.ribbon = ribbonUI;
         }
+
+        #region Development Methods
+
+        public void LoopInboxItems_Click(Office.IRibbonControl control) => Dev.LoopInbox();
+
+        #endregion Development Methods
 
         #endregion Ribbon Callbacks
 
