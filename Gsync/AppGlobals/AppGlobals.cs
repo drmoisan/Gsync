@@ -5,8 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gsync.Utilities.Interfaces;
+using System.Threading;
+using Gsync.Utilities.Threading;
+using Gsync.OutlookInterop;
 
-namespace Gsync.Utilities
+namespace Gsync
 {
     public class AppGlobals : IApplicationGlobals
     {
@@ -17,18 +20,22 @@ namespace Gsync.Utilities
             OutlookApplication = olApp ?? throw new ArgumentNullException(nameof(olApp), "Outlook Application cannot be null.");
         }
 
-        public async Task<AppGlobals> InitAsync()
+        public async Task<AppGlobals> InitAsync(SynchronizationContext context, int uiThreadId)
         {
-            await Task.CompletedTask; // Simulate async initialization 
+            await Task.Run(() => UI = new UiWrapper(context, uiThreadId));
+            await Task.Run(() => FS = new AppFileSystemFolderPaths());
+            //await Task.Run(() => Stores = new StoresWrapper(this));
+            Stores = new StoresWrapper(this).Init();
+
             return this;
         }
 
-        public static async Task<AppGlobals> CreateAsync(Application olApp)
+        public static async Task<AppGlobals> CreateAsync(Application olApp, SynchronizationContext context, int uiThreadId)
         {
             if (olApp == null)
                 throw new ArgumentNullException(nameof(olApp), "Outlook Application cannot be null.");
-            var globals = new AppGlobals(olApp);
-            return await globals.InitAsync();
+            var globals = new AppGlobals(olApp);            
+            return await globals.InitAsync(context, uiThreadId);
         }
 
         #endregion ctor
@@ -38,6 +45,10 @@ namespace Gsync.Utilities
         public Application OutlookApplication { get; internal set; }
 
         public IFileSystemFolderPaths FS { get; internal set; }
+
+        public UiWrapper UI { get; internal set; }    
+        
+        public StoresWrapper Stores { get; internal set; }
 
         #endregion Public Properties
 

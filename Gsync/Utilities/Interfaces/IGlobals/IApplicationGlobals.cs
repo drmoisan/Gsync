@@ -1,4 +1,6 @@
-﻿using Microsoft.Office.Interop.Outlook;
+﻿using Gsync.OutlookInterop;
+using Microsoft.Office.Interop.Outlook;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Gsync.Utilities.Interfaces
@@ -7,6 +9,7 @@ namespace Gsync.Utilities.Interfaces
     {
         IFileSystemFolderPaths FS { get; }
         Application OutlookApplication { get; }       
-        Task<AppGlobals> InitAsync();
+        Task<AppGlobals> InitAsync(SynchronizationContext context, int uiThreadId);
+        public StoresWrapper Stores { get; }
     }
 }

@@ -12,7 +12,7 @@ using System.Collections;
 using System.Diagnostics;
 
 
-namespace Gsync.Utilities.Extensions
+namespace Gsync.OutlookInterop.Extensions
 {
     public static class WinFormsExtensions
     {

@@ -8,7 +8,7 @@ using Gsync.Utilities.Interfaces;
 using Gsync.Utilities.Extensions;
 using Gsync.Utilities.HelperClasses;
 
-namespace Gsync.Utilities
+namespace Gsync
 {
 
     public class AppFileSystemFolderPaths : IFileSystemFolderPaths

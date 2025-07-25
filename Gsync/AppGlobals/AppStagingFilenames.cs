@@ -1,7 +1,7 @@
 ﻿using Gsync.Properties;
 using Gsync.Utilities.Interfaces;
 
-namespace Gsync.Utilities
+namespace Gsync
 {
     public class AppStagingFilenames : IAppStagingFilenames
     {

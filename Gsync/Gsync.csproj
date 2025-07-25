@@ -189,9 +189,12 @@
     can be found.
   -->
   <ItemGroup>
-    <Compile Include="Utilities\AppGlobals\AppFileSystemFolderPaths.cs" />
-    <Compile Include="Utilities\AppGlobals\AppGlobals.cs" />
-    <Compile Include="Utilities\AppGlobals\AppStagingFilenames.cs" />
+    <Compile Include="OutlookInterop\Folder\FolderMinimalWrapper.cs" />
+    <Compile Include="AppGlobals\AppFileSystemFolderPaths.cs" />
+    <Compile Include="AppGlobals\AppGlobals.cs" />
+    <Compile Include="AppGlobals\AppStagingFilenames.cs" />
+    <Compile Include="_Ribbon\DevelopmentMethods.cs" />
+    <Compile Include="_Ribbon\RibbonGsync.cs" />
     <Compile Include="Utilities\Dialogs\ActionButton.cs" />
     <Compile Include="Utilities\Dialogs\DelegateButton.cs" />
     <Compile Include="Utilities\Dialogs\DelegateButtonTemplate.cs">
@@ -226,7 +229,7 @@
     <Compile Include="Utilities\Extensions\ArrayExtensions.cs" />
     <Compile Include="Utilities\Extensions\JsonSerializerExtensions.cs" />
     <Compile Include="Utilities\Extensions\LazyExtension.cs" />
-    <Compile Include="Utilities\Extensions\WinFormsExtensions.cs" />
+    <Compile Include="OutlookInterop\Extensions\WinFormsExtensions.cs" />
     <Compile Include="Utilities\HelperClasses\FileSystem\FilePathHelper.cs" />
     <Compile Include="Utilities\HelperClasses\Logging\TraceUtility.cs" />
     <Compile Include="Utilities\HelperClasses\SimpleRegex.cs" />
@@ -250,6 +253,23 @@
     <Compile Include="Utilities\Interfaces\IReusableTypes\ISmartSerializableConfig.cs" />
     <Compile Include="Utilities\Interfaces\ITimer\ITimerWrapper.cs" />
     <Compile Include="Utilities\MailMessageChangeTracker.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IContainerControl.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IControl.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IControlCollection.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IForm.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IScrollableControl.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\IUserControl.cs" />
+    <Compile Include="OutlookInterop\Interfaces\IWinForm\PropertyStore.cs" />
+    <Compile Include="OutlookInterop\Store\IStoreWrapperViewer.cs" />
+    <Compile Include="OutlookInterop\Store\StoresWrapper.cs" />
+    <Compile Include="OutlookInterop\Store\StoreWrapper.cs" />
+    <Compile Include="OutlookInterop\Store\StoreWrapperController.cs" />
+    <Compile Include="OutlookInterop\Store\StoreWrapperViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OutlookInterop\Store\StoreWrapperViewer.Designer.cs">
+      <DependentUpon>StoreWrapperViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigController.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigGroupBox.cs">
       <SubType>Component</SubType>
@@ -271,6 +291,7 @@
     <Compile Include="Utilities\ReusableTypes\TimedActions\TimedDiskWriter.cs" />
     <Compile Include="Utilities\ReusableTypes\TimedActions\TimedQueueOfActions.cs" />
     <Compile Include="Utilities\ReusableTypes\TimedActions\TimerWrapper.cs" />
+    <Compile Include="Utilities\Threading\UiWrapper.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -292,6 +313,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Utilities\Dialogs\MyBoxViewer.resx">
       <DependentUpon>MyBoxViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OutlookInterop\Store\StoreWrapperViewer.resx">
+      <DependentUpon>StoreWrapperViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Utilities\ReusableTypes\SmartSerializable\Config\ConfigViewer.resx">
       <DependentUpon>ConfigViewer.cs</DependentUpon>
@@ -341,6 +365,9 @@
       <Project>{d8c1fc62-03e7-4662-a40f-33a3e27accbf}</Project>
       <Name>SVGControl</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="_Ribbon\RibbonGsync.xml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

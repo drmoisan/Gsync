@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Xml.Linq;
-using Office = Microsoft.Office.Core;
-using Outlook = Microsoft.Office.Interop.Outlook;
-using Gsync.Utilities;
+﻿using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Windows.Forms;
 
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
 [assembly: InternalsVisibleTo("Gsync.Test")]
@@ -18,17 +11,28 @@ namespace Gsync
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private AppGlobals _globals;
+        private SynchronizationContext _uiContext;
+        private int _uiThreadId;
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             Application.Startup += ApplicationStartupAsync;
+            SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
+            _uiContext = SynchronizationContext.Current;
+            _uiThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
         private async void ApplicationStartupAsync()
-        {
-            // Initialize the application globals
-            _globals = await AppGlobals.CreateAsync(Application);
+        {            
+            // Initialize the application globals            
+            _globals = await AppGlobals.CreateAsync(Application, _uiContext, _uiThreadId);
         }
+
+        protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        {
+            return new RibbonGsync();
+        }
+
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {

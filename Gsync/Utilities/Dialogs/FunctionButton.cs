@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Runtime.Remoting.Contexts;
 using System.Runtime.CompilerServices;
 using Gsync.Utilities.Extensions;
+using Gsync.OutlookInterop.Extensions;
 
 namespace Gsync.Utilities.Dialogs
 {
