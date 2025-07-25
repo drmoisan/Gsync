@@ -193,6 +193,7 @@
     <Compile Include="AppGlobals\AppFileSystemFolderPaths.cs" />
     <Compile Include="AppGlobals\AppGlobals.cs" />
     <Compile Include="AppGlobals\AppStagingFilenames.cs" />
+    <Compile Include="Utilities\Threading\UiTask.cs" />
     <Compile Include="_Ribbon\DevelopmentMethods.cs" />
     <Compile Include="_Ribbon\RibbonGsync.cs" />
     <Compile Include="Utilities\Dialogs\ActionButton.cs" />
