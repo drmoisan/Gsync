@@ -23,9 +23,8 @@ namespace Gsync
         public async Task<AppGlobals> InitAsync(SynchronizationContext context, int uiThreadId)
         {
             await Task.Run(() => UI = new UiWrapper(context, uiThreadId));
-            await Task.Run(() => FS = new AppFileSystemFolderPaths());
-            //await Task.Run(() => Stores = new StoresWrapper(this));
-            Stores = new StoresWrapper(this).Init();
+            await Task.Run(() => FS = new AppFileSystemFolderPaths());            
+            this.StoresWrapper = new StoresWrapper(this).Init();
 
             return this;
         }
@@ -48,7 +47,7 @@ namespace Gsync
 
         public UiWrapper UI { get; internal set; }    
         
-        public StoresWrapper Stores { get; internal set; }
+        public StoresWrapper StoresWrapper { get; internal set; }
 
         #endregion Public Properties
 

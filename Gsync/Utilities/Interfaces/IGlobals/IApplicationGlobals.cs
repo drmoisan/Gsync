@@ -10,6 +10,6 @@ namespace Gsync.Utilities.Interfaces
         IFileSystemFolderPaths FS { get; }
         Application OutlookApplication { get; }       
         Task<AppGlobals> InitAsync(SynchronizationContext context, int uiThreadId);
-        public StoresWrapper Stores { get; }
+        public StoresWrapper StoresWrapper { get; }
     }
 }

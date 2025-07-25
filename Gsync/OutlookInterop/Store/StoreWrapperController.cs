@@ -44,7 +44,7 @@ namespace Gsync.OutlookInterop
         public void Launch() 
         {
             FsConverter = new FilePathHelperConverter(Globals.FS).GetSerializablePath;
-            Model = Globals.Stores;
+            Model = Globals.StoresWrapper;
             Viewer = new StoreWrapperViewer(this);
             Viewer.DisplayName.DataSource = Model.Stores.Select(store => store.DisplayName).ToList();
             

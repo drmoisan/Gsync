@@ -13,6 +13,7 @@ namespace Gsync
         private AppGlobals _globals;
         private SynchronizationContext _uiContext;
         private int _uiThreadId;
+        private RibbonGsync _ribbon;
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
@@ -26,11 +27,13 @@ namespace Gsync
         {            
             // Initialize the application globals            
             _globals = await AppGlobals.CreateAsync(Application, _uiContext, _uiThreadId);
+            _ribbon.Globals = _globals;
         }
 
         protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
-            return new RibbonGsync();
+            _ribbon = new RibbonGsync();
+            return _ribbon;
         }
 
 
