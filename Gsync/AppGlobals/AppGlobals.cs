@@ -22,8 +22,10 @@ namespace Gsync
 
         public async Task<AppGlobals> InitAsync(SynchronizationContext context, int uiThreadId)
         {
-            await Task.Run(() => UI = new UiWrapper(context, uiThreadId));
-            await Task.Run(() => FS = new AppFileSystemFolderPaths());            
+            if (SynchronizationContext.Current is null) { SynchronizationContext.SetSynchronizationContext(context); }
+
+            await Task.Run(() => UI = new UiWrapper(context, uiThreadId)).ConfigureAwait(true);
+            await Task.Run(() => FS = new AppFileSystemFolderPaths()).ConfigureAwait(true);            
             this.StoresWrapper = new StoresWrapper(this).Init();
 
             return this;

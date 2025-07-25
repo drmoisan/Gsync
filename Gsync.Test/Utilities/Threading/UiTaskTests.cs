@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using Gsync.Utilities.HelperClasses;
 using Gsync.Utilities.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,23 +11,74 @@ namespace Gsync.Test
     [TestClass]
     public class UiTaskTests
     {
-        private SynchronizationContext _syncContext;
-        private int _uiThreadId;
+        private static SynchronizationContext _syncContext;
+        private static int _uiThreadId;
         private UiTask _uiTask;
+        private static Form _hiddenForm;
+
+        [ClassInitialize]
+        public static void ClassInit(TestContext context)
+        {
+            // Start a WinForms message loop to ensure we are on the UI thread
+            var uiThreadReady = new ManualResetEvent(false);
+
+            Thread uiThread = new Thread(() =>
+            {
+                // Create a hidden form to initialize the WindowsFormsSynchronizationContext
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+
+                // This will install the WindowsFormsSynchronizationContext for this thread
+                //var form = new Form();
+                _hiddenForm = new Form();
+
+                SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
+                //_syncContext = SynchronizationContext.Current;
+                //_uiThreadId = Thread.CurrentThread.ManagedThreadId;
+                uiThreadReady.Set();
+
+                // Run a minimal message loop
+                //Application.Run();               
+                Application.Run(_hiddenForm);
+
+            });
+
+            uiThread.SetApartmentState(ApartmentState.STA);
+            uiThread.IsBackground = true;
+            uiThread.Start();
+
+            // Wait for the UI thread to be ready and context installed
+            uiThreadReady.WaitOne();
+        }
 
         [TestInitialize]
         public void Setup()
         {
-            _uiThreadId = Thread.CurrentThread.ManagedThreadId;
-            _syncContext = new TestSyncContext(_uiThreadId);
+            Console.SetOut(new DebugTextWriter()); // Redirect Console output to Debug for testing
+            //_syncContext = new TestSyncContext(_uiThreadId);            
+            _hiddenForm.Invoke(() =>
+            {
+                _syncContext = SynchronizationContext.Current;
+                _uiThreadId = Thread.CurrentThread.ManagedThreadId;
+            }); // Ensure we are on the UI thread
+
             _uiTask = new UiTask(_syncContext, _uiThreadId);
         }
 
         [TestMethod]
         public async Task Run_Action_ExecutesOnContext()
         {
-            int threadId = -1;
-            await _uiTask.Run(() => threadId = Thread.CurrentThread.ManagedThreadId);
+            int threadId = Thread.CurrentThread.ManagedThreadId;            
+            
+            if (threadId == _uiThreadId)
+            {
+                throw new InvalidOperationException("This test must not run on the UI thread initially.");
+            }
+            else
+            {
+                await _uiTask.Run(() => threadId = Thread.CurrentThread.ManagedThreadId);
+            }
+
             Assert.AreEqual(_uiThreadId, threadId);
         }
 

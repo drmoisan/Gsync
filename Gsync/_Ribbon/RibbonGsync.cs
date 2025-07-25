@@ -1,5 +1,6 @@
 ﻿using Gsync.Ribbon;
 using Gsync.Utilities.Interfaces;
+using log4net.Repository.Hierarchy;
 using System;
 using System.IO;
 using System.Reflection;
@@ -30,6 +31,7 @@ namespace Gsync
     [ComVisible(true)]
     public class RibbonGsync : Office.IRibbonExtensibility
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private Office.IRibbonUI ribbon;
 
         public RibbonGsync() { }
@@ -41,6 +43,7 @@ namespace Gsync
             set 
             { 
                 _globals = value; 
+                logger.Debug($"Globals set in {nameof(RibbonGsync)}. Thread ID is: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
                 Dev = new DevelopmentMethods(_globals);
             }
         }
@@ -53,7 +56,7 @@ namespace Gsync
         {
             if (ribbonID == "Microsoft.Outlook.Explorer")
             {
-                return GetResourceText("Gsync.Ribbon.RibbonGsync.xml");
+                return GetResourceText("Gsync._Ribbon.RibbonGsync.xml");
             }
             return null;
         }
@@ -79,17 +82,24 @@ namespace Gsync
 
         private static string GetResourceText(string resourceName)
         {
+            logger.Debug($"GetResourceText called for resource: {resourceName}");
             Assembly asm = Assembly.GetExecutingAssembly();
             string[] resourceNames = asm.GetManifestResourceNames();
             for (int i = 0; i < resourceNames.Length; ++i)
             {
+                logger.Debug($"Checking resource: {resourceNames[i]}");
                 if (string.Compare(resourceName, resourceNames[i], StringComparison.OrdinalIgnoreCase) == 0)
                 {
+                    logger.Debug($"Found matching resource: {resourceNames[i]}");
                     using (StreamReader resourceReader = new StreamReader(asm.GetManifestResourceStream(resourceNames[i])))
                     {
                         if (resourceReader != null)
                         {
                             return resourceReader.ReadToEnd();
+                        }
+                        else
+                        {
+                            logger.Error($"Resource stream for {resourceNames[i]} is null.");
                         }
                     }
                 }

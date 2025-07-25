@@ -2,7 +2,7 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="Development">
+      <tab idMso="TabAddIns">
         <group id="GSyncDev" label="GSync Dev">
           <button id ="LoopInboxItems"
                   label="Loop Inbox Items"

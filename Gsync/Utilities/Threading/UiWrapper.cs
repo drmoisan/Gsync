@@ -10,15 +10,20 @@ namespace Gsync.Utilities.Threading
     public class UiWrapper
     {
         internal UiWrapper() { }
+
         public UiWrapper(SynchronizationContext context, int threadId)
         {
             UiContext = context ?? throw new ArgumentNullException(nameof(context), "SynchronizationContext cannot be null.");
             UiThreadId = threadId;
+            this.Task = new UiTask(context, threadId);
         }
+
         public SynchronizationContext UiContext { get; protected set; }
         public int UiThreadId { get; protected set; }
 
         public bool IsCurrentThread => Thread.CurrentThread.ManagedThreadId == UiThreadId;
+        
+        public UiTask Task { get; protected set; }
         
         public void Invoke(Action action)
         {
@@ -39,26 +44,6 @@ namespace Gsync.Utilities.Threading
             {
                 UiContext.Send(_ => action(), null);
             }
-        }
-
-        public Task RunOnContextAsync(SynchronizationContext context, Action action)
-        {
-            var tcs = new TaskCompletionSource<object>();
-
-            context.Post(_ =>
-            {
-                try
-                {
-                    action();
-                    tcs.SetResult(null); // Success
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex); // Propagate error
-                }
-            }, null);
-
-            return tcs.Task;
         }
 
     }
