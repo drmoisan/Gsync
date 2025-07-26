@@ -33,7 +33,7 @@ namespace Gsync.OutlookInterop
             Stores = olApp.Session.Accounts
                 .Cast<Outlook.Account>()
                 .Where(account => account.AccountType == OlAccountType.olImap)
-                .Select(account => new StoreWrapper(account.DeliveryStore, account))
+                .Select(account => new StoreWrapper(account.DeliveryStore, account).Init())
                 .ToList();
 
             return this;

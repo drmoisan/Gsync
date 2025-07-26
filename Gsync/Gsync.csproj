@@ -193,6 +193,11 @@
     <Compile Include="AppGlobals\AppFileSystemFolderPaths.cs" />
     <Compile Include="AppGlobals\AppGlobals.cs" />
     <Compile Include="AppGlobals\AppStagingFilenames.cs" />
+    <Compile Include="OutlookInterop\Interfaces\Items\IItem.cs" />
+    <Compile Include="OutlookInterop\Interfaces\Items\IMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
+    <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
+    <Compile Include="Utilities\Interfaces\IOutlookCommonItem.cs" />
     <Compile Include="Utilities\Threading\UiTask.cs" />
     <Compile Include="_Ribbon\DevelopmentMethods.cs" />
     <Compile Include="_Ribbon\RibbonGsync.cs" />
