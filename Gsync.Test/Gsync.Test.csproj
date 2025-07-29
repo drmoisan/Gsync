@@ -63,6 +63,7 @@
     <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
     <Compile Include="Utilities\Threading\TestSyncContext.cs" />
     <Compile Include="Utilities\Threading\UiTaskTests.cs" />
+    <Compile Include="Utilities\Threading\UiWrapperTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions">

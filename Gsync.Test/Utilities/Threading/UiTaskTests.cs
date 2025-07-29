@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using Gsync.Utilities.HelperClasses;
 using Gsync.Utilities.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,74 +9,30 @@ namespace Gsync.Test
     [TestClass]
     public class UiTaskTests
     {
-        private static SynchronizationContext _syncContext;
-        private static int _uiThreadId;
+        private SynchronizationContext _syncContext;
+        private int _uiThreadId;
         private UiTask _uiTask;
-        private static Form _hiddenForm;
-
-        [ClassInitialize]
-        public static void ClassInit(TestContext context)
-        {
-            // Start a WinForms message loop to ensure we are on the UI thread
-            var uiThreadReady = new ManualResetEvent(false);
-
-            Thread uiThread = new Thread(() =>
-            {
-                // Create a hidden form to initialize the WindowsFormsSynchronizationContext
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-
-                // This will install the WindowsFormsSynchronizationContext for this thread
-                //var form = new Form();
-                _hiddenForm = new Form();
-
-                SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
-                //_syncContext = SynchronizationContext.Current;
-                //_uiThreadId = Thread.CurrentThread.ManagedThreadId;
-                uiThreadReady.Set();
-
-                // Run a minimal message loop
-                //Application.Run();               
-                Application.Run(_hiddenForm);
-
-            });
-
-            uiThread.SetApartmentState(ApartmentState.STA);
-            uiThread.IsBackground = true;
-            uiThread.Start();
-
-            // Wait for the UI thread to be ready and context installed
-            uiThreadReady.WaitOne();
-        }
 
         [TestInitialize]
         public void Setup()
         {
-            Console.SetOut(new DebugTextWriter()); // Redirect Console output to Debug for testing
-            //_syncContext = new TestSyncContext(_uiThreadId);            
-            _hiddenForm.Invoke(() =>
-            {
-                _syncContext = SynchronizationContext.Current;
-                _uiThreadId = Thread.CurrentThread.ManagedThreadId;
-            }); // Ensure we are on the UI thread
-
+            _uiThreadId = Thread.CurrentThread.ManagedThreadId;
+            _syncContext = new TestSyncContext(_uiThreadId);
             _uiTask = new UiTask(_syncContext, _uiThreadId);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void Constructor_NullContext_Throws()
+        {
+            var _ = new UiTask(null, 1);
         }
 
         [TestMethod]
         public async Task Run_Action_ExecutesOnContext()
         {
-            int threadId = Thread.CurrentThread.ManagedThreadId;            
-            
-            if (threadId == _uiThreadId)
-            {
-                throw new InvalidOperationException("This test must not run on the UI thread initially.");
-            }
-            else
-            {
-                await _uiTask.Run(() => threadId = Thread.CurrentThread.ManagedThreadId);
-            }
-
+            int threadId = -1;
+            await _uiTask.Run(() => threadId = Thread.CurrentThread.ManagedThreadId);
             Assert.AreEqual(_uiThreadId, threadId);
         }
 
@@ -213,14 +167,144 @@ namespace Gsync.Test
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Constructor_NullContext_Throws()
+        public async Task Run_Action_ThrowsException_Propagates()
         {
-            var _ = new UiTask(null, 1);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run(() => throw new InvalidOperationException("Test exception"));
+            });
         }
 
-        // Helper SynchronizationContext for testing
+        [TestMethod]
+        public async Task Run_ActionT_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int>(x => throw new InvalidOperationException("Test exception"), 42);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int>((a, b) => throw new InvalidOperationException("Test exception"), 1, 2);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2T3_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<string, string, string>((a, b, c) => throw new InvalidOperationException("Test exception"), "A", "B", "C");
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2T3T4_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int>((a, b, c, d) => throw new InvalidOperationException("Test exception"), 1, 2, 3, 4);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2T3T4T5_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int>((a, b, c, d, e) => throw new InvalidOperationException("Test exception"), 1, 2, 3, 4, 5);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2T3T4T5T6_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int, int>((a, b, c, d, e, f) => throw new InvalidOperationException("Test exception"), 1, 2, 3, 4, 5, 6);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_ActionT1T2T3T4T5T6T7_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int, int, int>((a, b, c, d, e, f, g) => throw new InvalidOperationException("Test exception"), 1, 2, 3, 4, 5, 6, 7);
+            });
+        }
         
-        
+        [TestMethod]
+        public void UiTask_UiThreadId_ReturnsConstructorValue()
+        {
+            // Arrange
+            int expectedThreadId = 5678;
+            var context = new SynchronizationContext();
+            var uiTask = new UiTask(context, expectedThreadId);
+
+            // Act
+            int actualThreadId = uiTask.UiThreadId;
+
+            // Assert
+            Assert.AreEqual(expectedThreadId, actualThreadId);
+        }
+
+        [TestMethod]
+        public async Task Run_FuncTinTout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, string>(x => throw new InvalidOperationException("Test exception"), 21);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_FuncT1T2Tout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int>((a, b) => throw new InvalidOperationException("Test exception"), 10, 32);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_FuncT1T2T3Tout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int>((a, b, c) => throw new InvalidOperationException("Test exception"), 2, 3, 7);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_FuncT1T2T3T4Tout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int>((a, b, c, d) => throw new InvalidOperationException("Test exception"), 10, 10, 10, 12);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_FuncT1T2T3T4T5Tout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int, int>((a, b, c, d, e) => throw new InvalidOperationException("Test exception"), 10, 10, 10, 10, 2);
+            });
+        }
+
+        [TestMethod]
+        public async Task Run_FuncT1T2T3T4T5T6Tout_ThrowsException_Propagates()
+        {
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+            {
+                await _uiTask.Run<int, int, int, int, int, int, int>((a, b, c, d, e, f) => throw new InvalidOperationException("Test exception"), 10, 10, 10, 10, 1, 1);
+            });
+        }
     }
 }
