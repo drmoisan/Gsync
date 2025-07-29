@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Gsync.Utilities.ReusableTypes;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
-using Gsync.Utilities.ReusableTypes;
 
 namespace Gsync.Utilities.Interfaces
 {
@@ -11,20 +12,22 @@ namespace Gsync.Utilities.Interfaces
         T Deserialize(string fileName, string folderPath);
         T Deserialize(string fileName, string folderPath, bool askUserOnError);
         T Deserialize(string fileName, string folderPath, bool askUserOnError, JsonSerializerSettings settings);
-        T Deserialize<U>(SmartSerializable<U> loader) where U : class, ISmartSerializable<U>, new();
-        T Deserialize<U>(SmartSerializable<U> loader, bool askUserOnError, Func<T> altLoader)
+        T Deserialize<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new();
+        T Deserialize<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<T> altLoader)
             where U : class, ISmartSerializable<U>, new();
-        Task<T> DeserializeAsync<U>(SmartSerializable<U> config) where U : class, ISmartSerializable<U>, new();
-        Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError) where U : class, ISmartSerializable<U>, new();
-        Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new();
+        Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new();
+        Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError) where U : class, ISmartSerializable<U>, new();
+        Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new();
         T DeserializeObject(string json, JsonSerializerSettings settings);
 
         void Serialize();
         void Serialize(string filePath);
         void SerializeThreadSafe(string filePath);
-        
+        void SerializeToStream(StreamWriter sw);
+        string SerializeToString();
 
-        NewSmartSerializableConfig Config { get; set; }
+
+        ISmartSerializableConfig Config { get; set; }
 
         string Name { get; set; }
 

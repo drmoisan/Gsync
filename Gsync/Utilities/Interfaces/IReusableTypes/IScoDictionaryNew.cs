@@ -9,8 +9,6 @@ namespace Gsync.Utilities.Interfaces
 {
     public interface IScoDictionaryNew<TKey, TValue>: IConcurrentObservableDictionary<TKey, TValue>, ISmartSerializable<ScoDictionaryNew<TKey, TValue>>
     {
-        void Notify([CallerMemberName] string propertyName = "");
-        void SerializeToStream(StreamWriter sw);
-        string SerializeToString();
+        void Notify([CallerMemberName] string propertyName = "");        
     }
 }

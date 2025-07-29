@@ -42,10 +42,10 @@ namespace Gsync.Utilities.ReusableTypes
         #region ISmartSerializable
 
         [JsonProperty]
-        public NewSmartSerializableConfig Config { get => ism.Config; set => ism.Config = value; }
+        public ISmartSerializableConfig Config { get => ism.Config; set => ism.Config = value; }
 
         [JsonProperty]
-        protected virtual SmartSerializable<ScoDictionaryNew<TKey, TValue>> ism { get; set; }
+        protected virtual ISmartSerializable<ScoDictionaryNew<TKey, TValue>> ism { get; set; }
 
         public void Serialize() => ism.Serialize();
         public void Serialize(string filePath) => ism.Serialize(filePath);
@@ -57,19 +57,19 @@ namespace Gsync.Utilities.ReusableTypes
         public ScoDictionaryNew<TKey, TValue> Deserialize(string fileName, string folderPath) => ism.Deserialize(fileName, folderPath);
         public ScoDictionaryNew<TKey, TValue> Deserialize(string fileName, string folderPath, bool askUserOnError) => ism.Deserialize(fileName, folderPath, askUserOnError);
         public ScoDictionaryNew<TKey, TValue> Deserialize(string fileName, string folderPath, bool askUserOnError, JsonSerializerSettings settings) => ism.Deserialize(fileName, folderPath, askUserOnError, settings);
-        ScoDictionaryNew<TKey, TValue> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.Deserialize<U>(SmartSerializable<U> loader) => ism.Deserialize(loader);
-        ScoDictionaryNew<TKey, TValue> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.Deserialize<U>(SmartSerializable<U> loader, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader) => ism.Deserialize(loader, askUserOnError, altLoader);
+        ScoDictionaryNew<TKey, TValue> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.Deserialize<U>(ISmartSerializableLoader<U> loader) => ism.Deserialize(loader);
+        ScoDictionaryNew<TKey, TValue> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.Deserialize<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader) => ism.Deserialize(loader, askUserOnError, altLoader);
 
-        public async Task<ScoDictionaryNew<TKey, TValue>> DeserializeAsync<U>(SmartSerializable<U> config)
+        public async Task<ScoDictionaryNew<TKey, TValue>> DeserializeAsync<U>(ISmartSerializableLoader<U> config)
             where U : class, ISmartSerializable<U>, new() =>
             await ism.DeserializeAsync(config);
 
-        public async Task<ScoDictionaryNew<TKey, TValue>> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError)
+        public async Task<ScoDictionaryNew<TKey, TValue>> DeserializeAsync<U>(ISmartSerializableLoader<U> config, bool askUserOnError)
             where U : class, ISmartSerializable<U>, new() =>
             await ism.DeserializeAsync(config, askUserOnError);
 
         async Task<ScoDictionaryNew<TKey, TValue>> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.DeserializeAsync<U>(
-            SmartSerializable<U> config, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader) =>
+            ISmartSerializableLoader<U> config, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader) =>
             await ism.DeserializeAsync(config, askUserOnError, altLoader);
 
         #endregion ISmartSerializable
@@ -149,7 +149,7 @@ namespace Gsync.Utilities.ReusableTypes
             }
 
             public static async Task<ScoDictionaryNew<TKey, TValue>> DeserializeAsync<U>
-                (SmartSerializable<U> config, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader)
+                (ISmartSerializableLoader<U> config, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader)
                 where U : class, ISmartSerializable<U>, new() =>
                 await GetInstance().DeserializeAsync<U>(config, askUserOnError, altLoader);
 

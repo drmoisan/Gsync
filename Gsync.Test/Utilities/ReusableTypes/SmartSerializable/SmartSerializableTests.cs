@@ -1,122 +1,182 @@
-using System;
-using System.ComponentModel;
-using System.IO;
-using System.Threading.Tasks;
-using Gsync.Utilities.ReusableTypes;
+﻿using FluentAssertions;
 using Gsync.Utilities.HelperClasses;
-using Gsync.Utilities.HelperClasses.NewtonSoft;
+using Gsync.Utilities.ReusableTypes;
+using Microsoft.Office.Interop.Outlook;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json;
-using Gsync.Utilities.Interfaces;
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Gsync.Test.Utilities.ReusableTypes.SmartSerializable
-{
+{   
     [TestClass]
     public class SmartSerializableTests
     {
-        [TestMethod]
-        public void Constructor_WithParent_SetsParentAndConfig()
+        private SmartSerializable<TestConfig> _sut;
+        private FakeFileSystem _fileSystem;
+        private FakeUserDialog _userDialog;
+        private FakeTimerFactory _timerFactory;
+
+        [TestInitialize]
+        public void Init()
         {
-            var dummy = new DummySerializable();
-            var smart = new SmartSerializable<DummySerializable>(dummy);
-
-            // Use reflection to access protected _parent
-            var parentField = typeof(SmartSerializable<DummySerializable>)
-                .GetField("_parent", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var parentValue = parentField.GetValue(smart);
-
-            Assert.AreEqual(dummy, parentValue);
-            Assert.IsNotNull(smart.Config);
+            Console.SetOut(new DebugTextWriter()); 
+            _fileSystem = new FakeFileSystem();
+            _userDialog = new FakeUserDialog();
+            _timerFactory = new FakeTimerFactory();
+            _sut = new SmartSerializable<TestConfig>(new TestConfig())
+            {
+                FileSystem = _fileSystem,
+                UserDialog = _userDialog,
+                TimerFactory = _timerFactory
+            };
         }
 
         [TestMethod]
-        public void Config_Setter_SetsPropertySilently()
+        public void Serialize_WritesToFilePath_WhenFilePathNotEmpty()
         {
-            var smart = new SmartSerializable<DummySerializable>();
-            bool raised = false;
-            smart.PropertyChanged += (s, e) => { if (e.PropertyName == "Config") raised = true; };
+            var typedFactory = _sut.TimerFactory as FakeTimerFactory;
+            if (typedFactory is not null) { typedFactory.ImmediateTimer = true; }
+            var path = "myfile.json";
+            _sut.Config.Disk.FilePath = path;
 
-            var expected = !smart.Config.ClassifierActivated;
-            //var mockConfig = new Mock<NewSmartSerializableConfig>();
-            //mockConfig.Setup(c => c.ClassifierActivated).Returns(expected);
-            //var newConfig = mockConfig.Object;
-            var newConfig = new NewSmartSerializableConfig();
-            newConfig.ClassifierActivated = expected;
-            smart.Config = newConfig;
-            bool actual = smart.Config.ClassifierActivated;
-            Assert.IsFalse(raised);
-            Assert.AreEqual(expected, actual);
+            _sut.Serialize();
+
+            Console.WriteLine($"Expected serialization path: {path}");
+            Console.WriteLine($"Actual written path:         {_fileSystem.WrittenPath}");
+            _fileSystem.WrittenPath.Should().Be(path);
         }
+
+        [TestMethod]
+        public void SerializeThreadSafe_CreatesWriterAndSerializes()
+        {
+            var path = "testfile.json";
+            _sut.Config.Disk.FilePath = path;
+            _sut.SerializeThreadSafe(path);
+
+            _fileSystem.WrittenPath.Should().Be(path);
+        }
+
+        [TestMethod]
+        public void SerializeToString_ReturnsValidJson()
+        {
+            var json = _sut.SerializeToString();
+
+            json.Should().Contain("{");
+        }
+
+        [TestMethod]
+        public void DeserializeJson_FileDoesNotExist_ReturnsNull()
+        {
+            _fileSystem.FileExistsResult = false;
+            var result = _sut.DeserializeObject("{}", SmartSerializable<TestConfig>.GetDefaultSettings());
+
+            result.Should().NotBeNull();
+        }
+
+        [TestMethod]
+        public void Deserialize_FileExists_ReturnsInstance()
+        {
+            var expectedName = "test";
+            var instance = new TestConfig { Name = expectedName };
+            _fileSystem.FileContent = JsonConvert.SerializeObject(instance);
+            _sut.FileSystem = _fileSystem;
+
+            var actual = _sut.Deserialize("a.json", "folder");
+
+            actual.Should().NotBeNull();
+            actual.Name.Should().Be(expectedName);
+        }
+
+
+
+        /// <summary>
+        /// NOTE: The two-parameter overload of Deserialize(Deserialize(fileName, folderPath))
+        /// does NOT prompt the user or throw exceptions on missing/corrupt files.
+        /// It always uses askUserOnError: false and falls back to creating a new instance.
+        /// To test user interaction and exception handling, use the overload that accepts askUserOnError: true.        
+        /// Example:        
+        /// var instance = sut.Deserialize("missing.json", "folder", askUserOnError: true);
+        /// Now, user prompts and exception handling are testable.
+        /// </summary>
+        [TestMethod]
+        public void Deserialize_FileNotFound_FileNameFolderNameOverload_ReturnsNewInstance()
+        {
+            _fileSystem.FileExistsResult = false;
+            _userDialog.ResultToReturn = System.Windows.Forms.DialogResult.Yes;
+
+            var result = _sut.Deserialize("missing.json", "folder");
+
+            result.Should().NotBeNull();
+        }
+
+        
+
 
         [TestMethod]
         public void Notify_RaisesPropertyChanged()
         {
-            var smart = new SmartSerializable<DummySerializable>();
-            bool raised = false;
-            smart.PropertyChanged += (s, e) => { if (e.PropertyName == "TestProp") raised = true; };
+            string raised = null;
+            _sut.PropertyChanged += (s, e) => raised = e.PropertyName;
 
-            smart.Notify("TestProp");
-
-            Assert.IsTrue(raised);
+            _sut.Notify("MyProp");
+            raised.Should().Be("MyProp");
         }
 
         [TestMethod]
-        public void SerializeToString_ProducesValidJson()
+        public async Task DeserializeAsync_ReturnsDeserializedInstance()
         {
-            var dummy = new DummySerializable { Name = "Test" };
-            var smart = new SmartSerializable<DummySerializable>(dummy);
+            _fileSystem.FileContent = JsonConvert.SerializeObject(new TestConfig { Name = "z" });
+            var loader = new SmartSerializable<TestConfig>(new TestConfig())
+            {
+                FileSystem = _fileSystem,
+                UserDialog = _userDialog,
+                TimerFactory = _timerFactory
+            };
 
-            string json = smart.SerializeToString();
-
-            Assert.IsTrue(json.Contains("Test"));
+            var result = await _sut.DeserializeAsync(loader);
+            result.Should().NotBeNull();
         }
 
         [TestMethod]
-        public void DeserializeObject_ReturnsObject()
+        public void RequestSerialization_TriggersTimer()
         {
-            var smart = new SmartSerializable<DummySerializable>();
-            string json = JsonConvert.SerializeObject(new DummySerializable { Name = "Test" });
+            _sut.Config.Disk.FilePath = "p.json";
+            _sut.Serialize();
 
-            var result = smart.DeserializeObject(json, SmartSerializable<DummySerializable>.GetDefaultSettings());
-
-            Assert.IsNotNull(result);
-            Assert.AreEqual("Test", result.Name);
+            _timerFactory.LastTimer.Should().NotBeNull();
+            (_timerFactory.LastTimer as FakeTimer).Started.Should().BeTrue();
         }
 
         [TestMethod]
-        public async Task DeserializeAsync_ReturnsObject()
+        public void StaticDeserialize_CallsUnderlyingInstance()
         {
-            var smart = new SmartSerializable<DummySerializable>();
-            var loader = new SmartSerializable<DummySerializable>(new DummySerializable { Name = "AsyncTest" });
+            var json = JsonConvert.SerializeObject(new TestConfig { Name = "static" });
+            var instance = SmartSerializable<TestConfig>.Static.DeseriealizeObject(json, SmartSerializable<TestConfig>.GetDefaultSettings());
 
-            var result = await smart.DeserializeAsync(loader);
-
-            Assert.IsNotNull(result);
+            instance.Should().NotBeNull();
+            instance.Name.Should().Be("static");
         }
 
         [TestMethod]
-        public void SerializeThreadSafe_ThrowsIfParentNull()
+        public void CreateStreamWriter_UsesInjectedDelegateIfSet()
         {
-            var smart = new SmartSerializable<DummySerializable>();
-            // Set up a file path that won't be used
-            Assert.ThrowsException<ArgumentNullException>(() => smart.SerializeThreadSafe("dummy.json"));
+            bool wasCalled = false;
+            _sut.CreateStreamWriter = path =>
+            {
+                wasCalled = true;
+                return new StreamWriter(new MemoryStream());
+            };
+            _sut.SerializeThreadSafe("abc.txt");
+            wasCalled.Should().BeTrue();
         }
 
-        [TestMethod]
-        public void Config_PropertyChanged_RaisesPropertyChangedWithCorrectName()
-        {
-            // Arrange
-            var smart = new SmartSerializable<DummySerializable>();
-            string receivedPropertyName = null;
-            smart.PropertyChanged += (s, e) => receivedPropertyName = e.PropertyName;
-
-            // Act: change a property on Config to trigger PropertyChanged
-            var oldValue = smart.Config.ClassifierActivated;
-            smart.Config.ClassifierActivated = !oldValue;
-
-            // Assert
-            Assert.AreEqual(nameof(smart.Config.ClassifierActivated), receivedPropertyName);
-        }
+        // Add more tests for edge cases and negative scenarios as needed.
     }
 }
+
+

@@ -1,22 +1,27 @@
-﻿using Newtonsoft.Json;
+﻿using Gsync.Utilities.Extensions;
+using Gsync.Utilities.HelperClasses;
+using Gsync.Utilities.Interfaces;
+using Gsync.Utilities.Threading;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Gsync.Utilities.Extensions;
-using Gsync.Utilities.HelperClasses;
-using Gsync.Utilities.Interfaces;
-using Gsync.Utilities.Threading;
-using Gsync.Utilities.Dialogs;
 
 namespace Gsync.Utilities.ReusableTypes
 {
-    public class SmartSerializable<T> : ISmartSerializable<T> where T : class, ISmartSerializable<T>, new()
+    public class SmartSerializable<T> : ISmartSerializable<T>, ISmartSerializableLoader<T>
+        where T : class, ISmartSerializable<T>, new()
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        // Dependencies to be injected (via test, or assigned for production)
+        public IFileSystem FileSystem { get; set; }
+        public IUserDialog UserDialog { get; set; }
+        public ITimerFactory TimerFactory { get; set; }
 
         public SmartSerializable()
         {
@@ -26,40 +31,29 @@ namespace Gsync.Utilities.ReusableTypes
 
         public SmartSerializable(T parent)
         {
-            _parent = parent;            
+            _parent = parent;
             Config = new NewSmartSerializableConfig();
         }
 
         protected T _parent;
 
-        #region SerializationConfig
-
-        [JsonProperty]
-        public NewSmartSerializableConfig Config 
-        { 
+        private ISmartSerializableConfig _config = new NewSmartSerializableConfig();
+        public ISmartSerializableConfig Config
+        {
             get => _config;
-            set 
-            { 
+            set
+            {
                 if (_config is not null)
                     _config.PropertyChanged -= Config_PropertyChanged;
                 _config = value;
                 _config.PropertyChanged += Config_PropertyChanged;
             }
         }
-        
-        private NewSmartSerializableConfig _config = new NewSmartSerializableConfig();
-
-        #endregion SerializationConfig
 
         public string Name { get; set; }
 
-        #region INotifyPropertyChanged
-        
         private void Config_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            //var properties = string.Join(",",e.PropertyName.Split(',').Select(name => $"{typeof(T).Name}.{name}"));
-            //var properties = $"{typeof(T).Name},{e.PropertyName}";
-            //Notify(properties);
             Notify(e.PropertyName);
         }
 
@@ -70,30 +64,13 @@ namespace Gsync.Utilities.ReusableTypes
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        #endregion INotifyPropertyChanged
-
         #region Deserialization
 
-        protected T CreateEmpty(DialogResult response, FilePathHelper disk)
+        protected T CreateEmpty(DialogResult response, FilePathHelper disk, JsonSerializerSettings settings, Func<T> altLoader = null)
         {
             if (response == DialogResult.Yes)
             {
-                var instance = new T();
-                instance.Serialize(disk.FilePath);
-                return instance;
-            }
-            else
-            {
-                throw new ArgumentNullException(
-                $"Must have an instance of {typeof(T)} or create one to continue executing");
-            }
-        }
-
-        protected T CreateEmpty(DialogResult response, FilePathHelper disk, JsonSerializerSettings settings, Func<T> altLoader)
-        {
-            if (response == DialogResult.Yes)
-            {
-                var instance = altLoader is null ? new T(): altLoader();
+                var instance = altLoader is null ? new T() : altLoader();
                 instance.Config.JsonSettings = settings;
                 instance.Serialize(disk.FilePath);
                 return instance;
@@ -105,33 +82,33 @@ namespace Gsync.Utilities.ReusableTypes
             }
         }
 
-        protected T CreateEmpty(DialogResult response, FilePathHelper disk, JsonSerializerSettings settings)
-        {
-            return CreateEmpty(response, disk, settings, null);
-        }
-
         protected DialogResult AskUser(bool askUserOnError, string messageText)
         {
-            DialogResult response;
             if (askUserOnError)
             {
-                response = MyBox.ShowDialog(
+                return UserDialog.ShowDialog(
                     messageText,
                     "Error",
-                MessageBoxButtons.YesNo,
+                    MessageBoxButtons.YesNo,
                     MessageBoxIcon.Error);
             }
             else
             {
-                response = DialogResult.Yes;
+                return DialogResult.Yes;
             }
-            return response;
         }
 
+        /// <summary>
+        /// Deserializes an instance from the specified file.
+        /// This overload does NOT prompt the user on error—if the file is missing or corrupted,
+        /// it silently creates a new instance instead of asking the user or throwing an exception.
+        /// To enable user prompting and error handling, use an overload that exposes the 'askUserOnError' parameter.
+        /// </summary>
+        /// <param name="fileName">The name of the file to deserialize.</param>
+        /// <param name="folderPath">The folder path where the file is located.</param>
+        /// <returns>An instance of T, either loaded from disk or newly created if not found/corrupt.</returns>
         public T Deserialize(string fileName, string folderPath)
-        {
-            return Deserialize(fileName, folderPath, false);
-        }
+            => Deserialize(fileName, folderPath, false);
 
         public T Deserialize(string fileName, string folderPath, bool askUserOnError)
         {
@@ -146,22 +123,7 @@ namespace Gsync.Utilities.ReusableTypes
             return Deserialize(disk, askUserOnError, settings);
         }
 
-        public T TryDeserialize<U>(SmartSerializable<U> loader)
-            where U : class, ISmartSerializable<U>, new()
-        {
-            try
-            {
-                return Deserialize(loader);
-            }
-            catch (ArgumentNullException e)
-            {
-                logger.Error(e.Message);
-                return default;
-            }
-        }
-
-        public T Deserialize<U>(SmartSerializable<U> loader)
-            where U : class, ISmartSerializable<U>, new()
+        public T Deserialize<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new()
         {
             try
             {
@@ -178,28 +140,9 @@ namespace Gsync.Utilities.ReusableTypes
             }
         }
 
-        public T Deserialize<U>(ISmartSerializable<U> loader)
+        public T Deserialize<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<T> altLoader)
             where U : class, ISmartSerializable<U>, new()
         {
-            try
-            {
-                var disk = loader.ThrowIfNull().Config.ThrowIfNull().Disk.ThrowIfNull();
-                var settings = loader.Config.JsonSettings.ThrowIfNull();
-                T instance = DeserializeJson(loader.Config.Disk, loader.Config.JsonSettings);
-                if (instance is not null) { instance.Config.CopyFrom(loader.Config, true); }
-                return instance;
-            }
-            catch (ArgumentNullException e)
-            {
-                logger.Error(e.Message);
-                throw;
-            }
-        }
-
-        public T Deserialize<U>(SmartSerializable<U> loader, bool askUserOnError, Func<T> altLoader)
-            where U : class, ISmartSerializable<U>, new()
-        {
-            //Func<T> altLoader = null;
             var disk = loader.ThrowIfNull().Config.ThrowIfNull().Disk.ThrowIfNull();
             var settings = loader.Config.JsonSettings.ThrowIfNull();
             bool writeInstance = false;
@@ -208,7 +151,7 @@ namespace Gsync.Utilities.ReusableTypes
             try
             {
                 instance = DeserializeJson(loader.Config.Disk, loader.Config.JsonSettings);
-                if (instance is null) 
+                if (instance is null)
                 {
                     throw new InvalidOperationException($"{disk.FilePath} deserialized to null.");
                 }
@@ -254,7 +197,6 @@ namespace Gsync.Utilities.ReusableTypes
                 {
                     throw new InvalidOperationException($"{disk.FilePath} deserialized to null.");
                 }
-
             }
             catch (FileNotFoundException e)
             {
@@ -271,8 +213,16 @@ namespace Gsync.Utilities.ReusableTypes
                 response = AskUser(askUserOnError,
                     $"{disk.FilePath} encountered a problem. \n{e.Message}\n" +
                     $"Need a dictionary to continue. Create a new dictionary or abort execution?");
-                instance = CreateEmpty(response, disk, settings);
-                writeInstance = true;
+                if (response == DialogResult.Yes) 
+                { 
+                    instance = CreateEmpty(response, disk, settings);
+                    writeInstance = true;
+                }
+                else 
+                {                     
+                    throw new InvalidOperationException(
+                        $"Cannot continue execution without a valid instance of {typeof(T)}.");
+                }
             }
 
             instance.Config.Disk.FilePath = disk.FilePath;
@@ -284,29 +234,29 @@ namespace Gsync.Utilities.ReusableTypes
             return instance;
         }
 
-        public async Task<T> DeserializeAsync<U>(SmartSerializable<U> config) where U : class, ISmartSerializable<U>, new()
+        public async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new()
         {
-            return await Task.Run(() => Deserialize(config));
+            return await Task.Run(() => Deserialize(loader));
         }
 
-        public async Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError) where U : class, ISmartSerializable<U>, new()
+        public async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError) where U : class, ISmartSerializable<U>, new()
         {
-            return await Task.Run(() => Deserialize(config, askUserOnError, null));
+            return await Task.Run(() => Deserialize(loader, askUserOnError, null));
         }
 
-        public async Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new()
+        public async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new()
         {
-            return await Task.Run(() => Deserialize(config, askUserOnError, altLoader));
+            return await Task.Run(() => Deserialize(loader, askUserOnError, altLoader));
         }
 
         protected T DeserializeJson(FilePathHelper disk, JsonSerializerSettings settings)
         {
             T instance = null;
-            if (!disk.Exists()){ return instance; }
+            if (!FileSystem.Exists(disk.FilePath)) { return instance; }
             try
             {
                 instance = JsonConvert.DeserializeObject<T>(
-                    File.ReadAllText(disk.FilePath), settings);
+                    FileSystem.ReadAllText(disk.FilePath), settings);
             }
             catch (Exception e)
             {
@@ -327,9 +277,9 @@ namespace Gsync.Utilities.ReusableTypes
             {
                 logger.Error(e.Message, e);
             }
-            if (instance is not null) 
-            { 
-                instance.Config.JsonSettings = settings.DeepCopy(); 
+            if (instance is not null)
+            {
+                instance.Config.JsonSettings = settings.DeepCopy();
             }
             return instance;
         }
@@ -343,10 +293,10 @@ namespace Gsync.Utilities.ReusableTypes
         #endregion Deserialization
 
         #region Serialization
-                
+
         public void Serialize()
         {
-            if (Config.Disk.FilePath != "")
+            if (!string.IsNullOrEmpty(Config.Disk.FilePath))
             {
                 RequestSerialization(Config.Disk.FilePath);
             }
@@ -354,7 +304,7 @@ namespace Gsync.Utilities.ReusableTypes
 
         public void Serialize(string filePath)
         {
-            this.Config.Disk.FilePath = filePath;
+            Config.Disk.FilePath = filePath;
             RequestSerialization(filePath);
         }
 
@@ -369,14 +319,16 @@ namespace Gsync.Utilities.ReusableTypes
             };
         }
 
-        private Func<string, StreamWriter> _createStreamWriter = File.CreateText;
-        protected Func<string, StreamWriter> CreateStreamWriter { get => _createStreamWriter; set => _createStreamWriter = value; }
+        private Func<string, StreamWriter> _createStreamWriter;
+        protected internal Func<string, StreamWriter> CreateStreamWriter
+        {
+            get => _createStreamWriter ?? FileSystem.CreateText;
+            set => _createStreamWriter = value;
+        }
 
-        
         public void SerializeThreadSafe(string filePath)
         {
             _parent.ThrowIfNull($"{nameof(SmartSerializable<T>)}.{nameof(_parent)} is null. It must be linked to the instance it is serializing.");
-            // Set Status to Locked
             if (_readWriteLock.TryEnterWriteLock(-1))
             {
                 try
@@ -385,7 +337,7 @@ namespace Gsync.Utilities.ReusableTypes
                     {
                         SerializeToStream(sw);
                         sw.Close();
-                    }                    
+                    }
                 }
                 catch (System.Exception e)
                 {
@@ -393,12 +345,10 @@ namespace Gsync.Utilities.ReusableTypes
                 }
                 finally
                 {
-                    // Release lock
                     _readWriteLock.ExitWriteLock();
                     _serializationRequested = new ThreadSafeSingleShotGuard();
                 }
             }
-
         }
 
         public string SerializeToString()
@@ -436,13 +386,13 @@ namespace Gsync.Utilities.ReusableTypes
         }
 
         private ThreadSafeSingleShotGuard _serializationRequested = new();
-        private TimerWrapper _timer;
+        private ITimerWrapper _timer;
 
         protected void RequestSerialization(string filePath)
         {
             if (_serializationRequested.CheckAndSetFirstCall)
             {
-                _timer = new TimerWrapper(TimeSpan.FromSeconds(3));
+                _timer = TimerFactory.CreateTimer(TimeSpan.FromSeconds(3));
                 _timer.Elapsed += (sender, e) => SerializeThreadSafe(filePath);
                 _timer.AutoReset = false;
                 _timer.StartTimer();
@@ -452,7 +402,7 @@ namespace Gsync.Utilities.ReusableTypes
         #endregion Serialization
 
         #region Static
-        
+
         public static class Static
         {
             private static SmartSerializable<T> GetInstance() => new();
@@ -466,26 +416,25 @@ namespace Gsync.Utilities.ReusableTypes
             public static T Deserialize(string fileName, string folderPath, bool askUserOnError, JsonSerializerSettings settings) =>
                 GetInstance().Deserialize(fileName, folderPath, askUserOnError, settings);
 
-            public static T Deserialize<U>(SmartSerializable<U> config) where U : class, ISmartSerializable<U>, new() =>
-                GetInstance().Deserialize(config);
+            public static T Deserialize<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new() =>
+                GetInstance().Deserialize(loader);
 
             public static T DeseriealizeObject(string json, JsonSerializerSettings settings) =>
                 GetInstance().DeserializeObject(json, settings);
 
-            public static async Task<T> DeserializeAsync<U>(SmartSerializable<U> config) where U : class, ISmartSerializable<U>, new() =>
-                await GetInstance().DeserializeAsync(config);
+            public static async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader) where U : class, ISmartSerializable<U>, new() =>
+                await GetInstance().DeserializeAsync(loader);
 
-            public static async Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError) where U : class, ISmartSerializable<U>, new() =>
-                await GetInstance().DeserializeAsync(config, askUserOnError);
+            public static async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError) where U : class, ISmartSerializable<U>, new() =>
+                await GetInstance().DeserializeAsync(loader, askUserOnError);
 
-            public static async Task<T> DeserializeAsync<U>(SmartSerializable<U> config, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new() =>
-                await GetInstance().DeserializeAsync(config, askUserOnError, altLoader);
+            public static async Task<T> DeserializeAsync<U>(ISmartSerializableLoader<U> loader, bool askUserOnError, Func<T> altLoader) where U : class, ISmartSerializable<U>, new() =>
+                await GetInstance().DeserializeAsync(loader, askUserOnError, altLoader);
 
             internal static JsonSerializerSettings GetDefaultSettings() =>
                 SmartSerializable<T>.GetDefaultSettings();
         }
-        
+
         #endregion Static
     }
-
 }
