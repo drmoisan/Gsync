@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 namespace Gsync.Test.OutlookInterop.Item
 {
     [TestClass]
-    public class OutlookItemWrapperTests
+    public class OutlookItemLooseWrapperTests
     {
         [TestInitialize]
         public void Setup()
@@ -31,9 +31,9 @@ namespace Gsync.Test.OutlookInterop.Item
             return mock;
         }
 
-        private OutlookItemWrapper CreateWrapper(Mock<MailItem> mock)
+        private OutlookItemLooseWrapper CreateWrapper(Mock<MailItem> mock)
         {
-            return new OutlookItemWrapper(mock.Object);
+            return new OutlookItemLooseWrapper(mock.Object);
         }
 
         [TestMethod]
@@ -41,7 +41,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void _OutlookItemWrapper_ExceptionIfNullObject()
         {
             Console.WriteLine("Testing OutlookItemWrapper with null object");
-            var wrapper = new OutlookItemWrapper(null);
+            var wrapper = new OutlookItemLooseWrapper(null);
         }
 
         [TestMethod]
@@ -49,7 +49,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void _OutlookItemWrapper_ExceptionIfUnsupportedType()
         {
             Console.WriteLine("Testing OutlookItemWrapper with unsupported type");
-            var wrapper = new OutlookItemWrapper(new object());                        
+            var wrapper = new OutlookItemLooseWrapper(new object());
         }
 
         [TestMethod]
@@ -152,7 +152,7 @@ namespace Gsync.Test.OutlookInterop.Item
             eventsMock.SetupRemove(e => e.AttachmentAdd -= It.IsAny<ItemEvents_10_AttachmentAddEventHandler>())
                 .Callback(() => unsubscribed = true);
 
-            var wrapper = new TestableOutlookItemWrapper(mailItemMock.Object, eventsMock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mailItemMock.Object, eventsMock.Object);
             wrapper.Dispose();
 
             Assert.IsTrue(wrapper.ReleasedObjects.Count >= 1, "Should release at least one object.");
@@ -165,7 +165,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void Dispose_MultipleCalls_IsIdempotent()
         {
             var mailItemMock = new Mock<MailItem>();
-            var wrapper = new TestableOutlookItemWrapper(mailItemMock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mailItemMock.Object);
             wrapper.Dispose();
             int releasedAfterFirstCall = wrapper.ReleasedObjects.Count;
             wrapper.Dispose(); // second call should have no effect
@@ -178,7 +178,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void Dispose_NoEvents_NoException()
         {
             var mailItemMock = new Mock<MailItem>();
-            var wrapper = new TestableOutlookItemWrapper(mailItemMock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mailItemMock.Object);
             wrapper.Dispose();
             Assert.IsTrue(wrapper.ReleasedObjects.Contains(mailItemMock.Object));
         }
@@ -191,7 +191,7 @@ namespace Gsync.Test.OutlookInterop.Item
             var wrapper = CreateWrapper(mock);
             Assert.AreEqual("EntryId", wrapper.EntryID);
         }
-                
+
         [TestMethod]
         public void HTMLBody_Property_GetSet()
         {
@@ -388,7 +388,7 @@ namespace Gsync.Test.OutlookInterop.Item
             }.ToImmutableHashSet();
             var mockEvents = new Mock<ItemEvents_10_Event>();
 
-            var wrapper = new TestableOutlookItemWrapper(dummy, mockEvents.Object, supportedTypes);
+            var wrapper = new TestableOutlookItemLooseWrapper(dummy, mockEvents.Object, supportedTypes);
             //var wrapper = new OutlookItemWrapper(dummy);
 
             // Set up log4net memory appender
@@ -499,7 +499,7 @@ namespace Gsync.Test.OutlookInterop.Item
             mockException.SetupAllProperties();
             mockException.Setup(m => m.Message).Returns("Test exception").Verifiable();
             mockException.Setup(m => m.ErrorCode).Returns(80004005); // E_FAIL
-            mock.Setup(m => m.Application).Throws(mockException.Object);            
+            mock.Setup(m => m.Application).Throws(mockException.Object);
             var wrapper = CreateWrapper(mock);
 
             // Should not throw, should return default (null for Application)
@@ -571,9 +571,9 @@ namespace Gsync.Test.OutlookInterop.Item
         }
 
         // Helper to access protected method
-        private bool wrapperProtectedIsComObjectFunc(OutlookItemWrapper wrapper, object obj)
+        private bool wrapperProtectedIsComObjectFunc(OutlookItemLooseWrapper wrapper, object obj)
         {
-            var method = typeof(OutlookItemWrapper).GetMethod("IsComObjectFunc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var method = typeof(OutlookItemLooseWrapper).GetMethod("IsComObjectFunc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             return (bool)method.Invoke(wrapper, new[] { obj });
         }
 
@@ -581,7 +581,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnAttachmentAdd_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
             wrapper.AttachmentAdd += a =>
@@ -598,7 +598,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnAttachmentRead_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
             wrapper.AttachmentRead += a =>
@@ -615,7 +615,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnAttachmentRemove_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
             wrapper.AttachmentRemove += a =>
@@ -632,7 +632,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnBeforeDelete_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             object item = new object();            
             wrapper.BeforeDelete += (object i, ref bool c) =>
@@ -645,14 +645,14 @@ namespace Gsync.Test.OutlookInterop.Item
             bool cancelArg = false;
             wrapper.InvokeOnBeforeDelete(item, ref cancelArg);
             Assert.IsTrue(called);
-            Assert.IsTrue(cancelArg);            
+            Assert.IsTrue(cancelArg);
         }
 
         [TestMethod]
         public void OnCloseEvent_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             wrapper.CloseEvent += (ref bool c) =>
             {
@@ -670,7 +670,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnOpen_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             wrapper.Open += (ref bool c) =>
             {
@@ -688,7 +688,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnPropertyChange_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             string propertyName = "TestProp";
             wrapper.PropertyChange += name =>
@@ -705,7 +705,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnRead_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             wrapper.Read += () => called = true;
 
@@ -717,7 +717,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void OnWrite_RaisesEvent()
         {
             var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            var wrapper = new TestableOutlookItemLooseWrapper(mock.Object);
             bool called = false;
             wrapper.Write += (ref bool c) =>
             {
@@ -730,7 +730,7 @@ namespace Gsync.Test.OutlookInterop.Item
             Assert.IsTrue(called);
             Assert.IsTrue(cancel);
         }
-                
+
     }
 
 }

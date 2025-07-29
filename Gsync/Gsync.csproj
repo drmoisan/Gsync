@@ -102,6 +102,9 @@
   -->
   <ItemGroup>
     <Reference Include="Accessibility" />
+    <Reference Include="Microsoft.Office.Interop.Outlook, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -142,11 +145,7 @@
       <ItemGroup>
         <Reference Include="Office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
           <Private>False</Private>
-          <EmbedInteropTypes>true</EmbedInteropTypes>
-        </Reference>
-        <Reference Include="Microsoft.Office.Interop.Outlook, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
-          <Private>False</Private>
-          <EmbedInteropTypes>true</EmbedInteropTypes>
+          <EmbedInteropTypes>False</EmbedInteropTypes>
         </Reference>
       </ItemGroup>
     </When>
@@ -161,23 +160,9 @@
           <Isolated>False</Isolated>
           <EmbedInteropTypes>true</EmbedInteropTypes>
         </COMReference>
-        <COMReference Include="Microsoft.Office.Interop.Outlook">
-          <Guid>{00062FFF-0000-0000-C000-000000000046}</Guid>
-          <VersionMajor>9</VersionMajor>
-          <VersionMinor>5</VersionMinor>
-          <Lcid>0</Lcid>
-          <WrapperTool>tlbimp</WrapperTool>
-          <Isolated>False</Isolated>
-          <EmbedInteropTypes>true</EmbedInteropTypes>
-        </COMReference>
       </ItemGroup>
     </Otherwise>
   </Choose>
-  <ItemGroup>
-    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
   <!--
     This section defines the user source files that are part of the project.
      
@@ -195,6 +180,8 @@
     <Compile Include="AppGlobals\AppStagingFilenames.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IItem.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\MailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\OutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
     <Compile Include="Utilities\Interfaces\IOutlookCommonItem.cs" />
@@ -379,6 +366,17 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="_Ribbon\RibbonGsync.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="stdole1">
+      <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

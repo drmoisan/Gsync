@@ -56,7 +56,9 @@
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\OutlookItemTypeTests.cs" />
     <Compile Include="OutlookInterop\OutlookItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\TestableOutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\TestableOutlookItemWrapper.cs" />
+    <Compile Include="OutlookInterop\OutlookItemLooseWrapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
     <Compile Include="Utilities\Threading\TestSyncContext.cs" />

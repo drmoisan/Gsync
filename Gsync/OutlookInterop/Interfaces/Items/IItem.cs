@@ -22,6 +22,7 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         string EntryID { get; }
         string HTMLBody { get; set; }
         OlImportance Importance { get; set; }
+        object InnerObject { get; }
         ItemProperties ItemProperties { get; }
         DateTime LastModificationTime { get; }
         string MessageClass { get; }
@@ -38,6 +39,7 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         int Size { get; }
         string Subject { get; set; }
         bool UnRead { get; set; }
+        
         // Methods
         void Close(OlInspectorClose SaveMode);
         object Copy();

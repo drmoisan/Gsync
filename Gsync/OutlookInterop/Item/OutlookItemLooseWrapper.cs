@@ -17,38 +17,38 @@ namespace Gsync.OutlookInterop.Item
     using System.Reflection;
     using System.Runtime.InteropServices;
 
-    public class OutlookItemWrapper : IItem, IDisposable
+    public class OutlookItemLooseWrapper : IItem, IDisposable
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         #region ctor
 
-        public OutlookItemWrapper(object item)
+        public OutlookItemLooseWrapper(object item)
             : this(item, item as ItemEvents_10_Event)
         {
             Init();
         }
 
-        protected OutlookItemWrapper(object item, ItemEvents_10_Event comEvents)
-        {
-            _item = item; 
-            _comEvents = comEvents;            
-        }
-
-        protected OutlookItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
-            
+        protected OutlookItemLooseWrapper(object item, ItemEvents_10_Event comEvents)
         {
             _item = item;
-            _comEvents = comEvents;            
+            _comEvents = comEvents;
+        }
+
+        protected OutlookItemLooseWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
+
+        {
+            _item = item;
+            _comEvents = comEvents;
             SupportedTypes = supportedTypes;
         }
 
-        protected OutlookItemWrapper Init()
+        protected OutlookItemLooseWrapper Init()
         {
             // Initialize any additional properties or state here if needed
             _item.ThrowIfNull();
-            
+
             var type = OutlookItemType.GetType(_item);
             string name = type?.Name ?? $"Unknown Type";
 
@@ -60,7 +60,7 @@ namespace Gsync.OutlookInterop.Item
 
             _dyn = _item;
             _itemType = type;
-            
+
             // Set up COM event bridge
 
             AttachComEvents();
@@ -73,10 +73,10 @@ namespace Gsync.OutlookInterop.Item
 
         #region Private Fields and Properties
 
-        protected readonly object _item;
-        protected Type _itemType;
-        protected dynamic _dyn;
-        protected bool _disposed = false;
+        private readonly object _item;
+        private Type _itemType;
+        private dynamic _dyn;
+        private bool _disposed = false;
 
         // Cache for PropertyInfo and MethodInfo
         private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> PropertyCache = new();
@@ -134,7 +134,7 @@ namespace Gsync.OutlookInterop.Item
             get => TryGet(() => (OlImportance)_dyn.Importance);
             set => TrySet(() => _dyn.Importance = value);
         }
-        public object InnerObject => _item; // Directly expose the underlying COM object
+        public object InnerObject => TryGet(() => (object)_dyn.InnerObject);
         public ItemProperties ItemProperties => TryGet(() => (ItemProperties)_dyn.ItemProperties);
         public DateTime LastModificationTime => TryGet(() => (DateTime)_dyn.LastModificationTime);
         public string MessageClass => TryGet(() => (string)_dyn.MessageClass);
@@ -180,12 +180,12 @@ namespace Gsync.OutlookInterop.Item
         {
             try
             {
-                var method = _item.GetType().GetMethod("Close", new[] { typeof(OlInspectorClose) });                
-                method.Invoke(_item, new object[] { SaveMode });                
+                var method = _item.GetType().GetMethod("Close", new[] { typeof(OlInspectorClose) });
+                method.Invoke(_item, new object[] { SaveMode });
             }
             catch (System.Exception e)
             {
-                logger.Error($"Error closing item: {e.Message}", e);                
+                logger.Error($"Error closing item: {e.Message}", e);
             }
         }
         public object Copy()
@@ -221,18 +221,18 @@ namespace Gsync.OutlookInterop.Item
             TrySet(() => _dyn.ShowCategoriesDialog());
         }
 
-        
+
         // --- IDisposable support for event cleanup ---
-        public virtual void Dispose()
+        public void Dispose()
         {
             if (_disposed) return;
             DetachComEvents();
 
             // Explicitly release COM object(s)
-            ReleaseComObject(_dyn);            
-            ReleaseComObject(_item);            
+            ReleaseComObject(_dyn);
+            ReleaseComObject(_item);
             ReleaseComObject(_comEvents);
-            
+
             _disposed = true;
             GC.SuppressFinalize(this);
         }
@@ -275,11 +275,11 @@ namespace Gsync.OutlookInterop.Item
         #endregion COM Event Handlers => Invoke C# Events
 
         #region Wire and Unwire Bridge COM Event Handlers
-        
-        protected ItemEvents_10_Event _comEvents;
+
+        private ItemEvents_10_Event _comEvents;
 
         private void AttachComEvents()
-        {            
+        {
             if (_comEvents == null) return;
 
             // Wire each COM event to .NET event
@@ -357,7 +357,7 @@ namespace Gsync.OutlookInterop.Item
                 logger.Error($"Exception in TrySet: {ex.Message}", ex);
             }
         }
-                
+
         #endregion Private Helper Methods
 
     }

@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Microsoft.Office.Interop.Outlook;
 
-namespace Gsync.Tests.OutlookInterop.Item
+namespace Gsync.Test.OutlookInterop.Item
 {
     [TestClass]
     public class OutlookItemTypeTests
