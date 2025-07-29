@@ -66,6 +66,7 @@
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\Old\DummySerializable.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\Old\SmartSerializableTestsOld.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableTests.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\TestableSmartSerializable.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\TestConfig.cs" />
     <Compile Include="Utilities\Threading\TestSyncContext.cs" />
     <Compile Include="Utilities\Threading\ThreadSafeSingleShotGuardTests.cs" />

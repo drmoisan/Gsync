@@ -71,26 +71,26 @@ namespace Gsync.Utilities.ReusableTypes
             if (response == DialogResult.Yes)
             {
                 var instance = altLoader is null ? new T() : altLoader();
+                if (instance == null)
+                    throw new InvalidOperationException($"{nameof(altLoader)} returned null instance.");
                 instance.Config.JsonSettings = settings;
                 instance.Serialize(disk.FilePath);
                 return instance;
             }
             else
             {
-                throw new ArgumentNullException(
-                $"Must have an instance of {typeof(T)} or create one to continue executing");
+                throw new InvalidOperationException(
+                    $"Must have an instance of {typeof(T)} or create one to continue executing");
             }
         }
 
+
         protected DialogResult AskUser(bool askUserOnError, string messageText)
         {
-            if (askUserOnError)
-            {
-                return UserDialog.ShowDialog(
-                    messageText,
-                    "Error",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Error);
+            if (askUserOnError && UserDialog is not null)
+            {                
+                return UserDialog.ShowDialog(messageText, "Error",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Error);                
             }
             else
             {
@@ -162,8 +162,16 @@ namespace Gsync.Utilities.ReusableTypes
                 var response = AskUser(askUserOnError,
                     $"{disk.FilePath} not found. Need an instance of {typeof(T)} to " +
                     $"continue. Create a new dictionary or abort execution?");
-                instance = CreateEmpty(response, disk, settings, altLoader);
-                writeInstance = true;
+                if (response == DialogResult.Yes)
+                {
+                    instance = CreateEmpty(response, disk, settings, altLoader);
+                    writeInstance = true;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Cannot continue execution without a valid instance of {typeof(T)}.");
+                }                
             }
             catch (System.Exception e)
             {
@@ -252,7 +260,8 @@ namespace Gsync.Utilities.ReusableTypes
         protected T DeserializeJson(FilePathHelper disk, JsonSerializerSettings settings)
         {
             T instance = null;
-            if (!FileSystem.Exists(disk.FilePath)) { return instance; }
+            //if (!FileSystem.Exists(disk.FilePath)) { return instance; }
+            if (!FileSystem.Exists(disk.FilePath)) { throw new FileNotFoundException(disk.FilePath); }
             try
             {
                 instance = JsonConvert.DeserializeObject<T>(
@@ -405,7 +414,9 @@ namespace Gsync.Utilities.ReusableTypes
 
         public static class Static
         {
-            private static SmartSerializable<T> GetInstance() => new();
+            internal static Func<SmartSerializable<T>> GetInstanceFactory { get; set; } = () => new SmartSerializable<T>();
+
+            internal static SmartSerializable<T> GetInstance() => GetInstanceFactory();
 
             public static T Deserialize(string fileName, string folderPath) =>
                 GetInstance().Deserialize(fileName, folderPath);
