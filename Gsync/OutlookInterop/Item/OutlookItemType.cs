@@ -28,7 +28,7 @@ namespace Gsync.OutlookInterop.Item
             if (comObject is TaskRequestItem) return typeof(TaskRequestItem);
             if (comObject is TaskRequestUpdateItem) return typeof(TaskRequestUpdateItem);
 
-            return null;
+            return comObject.GetType();
         }
     }
 }

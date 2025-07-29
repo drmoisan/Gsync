@@ -7,37 +7,240 @@ using System.Threading.Tasks;
 namespace Gsync.OutlookInterop.Item
 {
     using Gsync.OutlookInterop.Interfaces.Items;
+    using Gsync.Utilities.Extensions;
+    using log4net.Repository.Hierarchy;
     using Microsoft.Office.Interop.Outlook;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Reflection;
     using System.Runtime.InteropServices;
 
     public class OutlookItemWrapper : IItem, IDisposable
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
+            System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region ctor
+
+        public OutlookItemWrapper(object item)
+            : this(item, item as ItemEvents_10_Event)
+        {
+            Init();
+        }
+
+        protected OutlookItemWrapper(object item, ItemEvents_10_Event comEvents)
+        {
+            _item = item; 
+            _comEvents = comEvents;            
+        }
+
+        protected OutlookItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
+            
+        {
+            _item = item;
+            _comEvents = comEvents;            
+            SupportedTypes = supportedTypes;
+        }
+
+        protected OutlookItemWrapper Init()
+        {
+            // Initialize any additional properties or state here if needed
+            _item.ThrowIfNull();
+            
+            var type = OutlookItemType.GetType(_item);
+            string name = type?.Name ?? $"Unknown Type";
+
+            if (!SupportedTypes.Contains(name))
+                throw new ArgumentException($"Object type '{name}' is not a supported Outlook item type.");
+
+            // This should never be null if the item is supported
+            _comEvents.ThrowIfNull();
+
+            _dyn = _item;
+            _itemType = type;
+            
+            // Set up COM event bridge
+
+            AttachComEvents();
+            return this;
+        }
+
+
+
+        #endregion ctor
+
+        #region Private Fields and Properties
+
         private readonly object _item;
-        private readonly Type _itemType;
+        private Type _itemType;
+        private dynamic _dyn;
         private bool _disposed = false;
 
         // Cache for PropertyInfo and MethodInfo
         private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> PropertyCache = new();
         private static readonly ConcurrentDictionary<Type, Dictionary<string, MethodInfo>> MethodCache = new();
 
-        // Supported Outlook item types (COM class names)
-        private static readonly HashSet<string> SupportedTypes = new(
-            new[]
-            {
+        // Supported Outlook item types (COM class names)        
+        private static readonly ImmutableHashSet<string> DefaultSupportedTypes = new HashSet<string>(
+        [
             "MailItem", "TaskItem", "AppointmentItem", "ContactItem", "NoteItem",
             "JournalItem", "PostItem", "ReportItem", "DistListItem", "DocumentItem",
             "RemoteItem", "SharingItem", "StorageItem",
             "TaskRequestItem", "TaskRequestAcceptItem", "TaskRequestDeclineItem", "TaskRequestUpdateItem"
-            }
-        );
+        ]).ToImmutableHashSet();
 
-        // Event bridging
-        private ItemEvents_10_Event _comEvents;
-        private readonly List<Delegate> _eventHandlers = new();
+        internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();
+
+        #endregion Private Fields and Properties
+
+        #region Properties
+
+        // Forward properties (expand as needed)
+        public Application Application => TryGet(() => (Application)_dyn.Application);
+        public Attachments Attachments => TryGet(() => (Attachments)_dyn.Attachments);
+        public string BillingInformation
+        {
+            get => TryGet(() => (string)_dyn.BillingInformation);
+            set => TrySet(() => _dyn.BillingInformation = value);
+        }
+        public string Body
+        {
+            get => TryGet(() => (string)_dyn.Body);
+            set => TrySet(() => _dyn.Body = value);
+        }
+        public string Categories
+        {
+            get => TryGet(() => (string)_dyn.Categories);
+            set => TrySet(() => _dyn.Categories = value);
+        }
+        public OlObjectClass Class => TryGet(() => (OlObjectClass)_dyn.Class);
+        public string Companies
+        {
+            get => TryGet(() => (string)_dyn.Companies);
+            set => TrySet(() => _dyn.Companies = value);
+        }
+        public string ConversationID => TryGet(() => (string)_dyn.ConversationID);
+        public DateTime CreationTime => TryGet(() => (DateTime)_dyn.CreationTime);
+        public string EntryID => TryGet(() => (string)_dyn.EntryID);
+        public string HTMLBody
+        {
+            get => TryGet(() => (string)_dyn.HTMLBody);
+            set => TrySet(() => _dyn.HTMLBody = value);
+        }
+        public OlImportance Importance
+        {
+            get => TryGet(() => (OlImportance)_dyn.Importance);
+            set => TrySet(() => _dyn.Importance = value);
+        }
+        public ItemProperties ItemProperties => TryGet(() => (ItemProperties)_dyn.ItemProperties);
+        public DateTime LastModificationTime => TryGet(() => (DateTime)_dyn.LastModificationTime);
+        public string MessageClass => TryGet(() => (string)_dyn.MessageClass);
+        public string Mileage
+        {
+            get => TryGet(() => (string)_dyn.Mileage);
+            set => TrySet(() => _dyn.Mileage = value);
+        }
+        public bool NoAging
+        {
+            get => TryGet(() => (bool)_dyn.NoAging);
+            set => TrySet(() => _dyn.NoAging = value);
+        }
+        public int OutlookInternalVersion => TryGet(() => (int)_dyn.OutlookInternalVersion);
+        public string OutlookVersion => TryGet(() => (string)_dyn.OutlookVersion);
+        public object Parent => TryGet(() => (object)_dyn.Parent);
+        public bool Saved => TryGet(() => (bool)_dyn.Saved);
+        public string SenderEmailAddress => TryGet(() => (string)_dyn.SenderEmailAddress);
+        public string SenderName => TryGet(() => (string)_dyn.SenderName);
+        public OlSensitivity Sensitivity
+        {
+            get => TryGet(() => (OlSensitivity)_dyn.Sensitivity);
+            set => TrySet(() => _dyn.Sensitivity = value);
+        }
+        public NameSpace Session => TryGet(() => (NameSpace)_dyn.Session);
+        public int Size => TryGet(() => (int)_dyn.Size);
+        public string Subject
+        {
+            get => TryGet(() => (string)_dyn.Subject);
+            set => TrySet(() => _dyn.Subject = value);
+        }
+        public bool UnRead
+        {
+            get => TryGet(() => (bool)_dyn.UnRead);
+            set => TrySet(() => _dyn.UnRead = value);
+        }
+        #endregion Properties
+
+        #region Public Methods
+
+        // Methods        
+        public void Close(OlInspectorClose SaveMode)
+        {
+            try
+            {
+                var method = _item.GetType().GetMethod("Close", new[] { typeof(OlInspectorClose) });                
+                method.Invoke(_item, new object[] { SaveMode });                
+            }
+            catch (System.Exception e)
+            {
+                logger.Error($"Error closing item: {e.Message}", e);                
+            }
+        }
+        public object Copy()
+        {
+            return TryGet(() => _dyn.Copy());
+        }
+        public void Delete()
+        {
+            TrySet(() => _dyn.Delete());
+        }
+        public void Display(object Modal = null)
+        {
+            TrySet(() => { if (Modal != null) _dyn.Display(Modal); else _dyn.Display(); });
+        }
+        public object Move(MAPIFolder DestFldr)
+        {
+            return TryGet(() => _dyn.Move(DestFldr));
+        }
+        public void PrintOut()
+        {
+            TrySet(() => _dyn.PrintOut());
+        }
+        public void Save()
+        {
+            TrySet(() => _dyn.Save());
+        }
+        public void SaveAs(string Path, object Type = null)
+        {
+            TrySet(() => { if (Type != null) _dyn.SaveAs(Path, Type); else _dyn.SaveAs(Path); });
+        }
+        public void ShowCategoriesDialog()
+        {
+            TrySet(() => _dyn.ShowCategoriesDialog());
+        }
+
+        
+        // --- IDisposable support for event cleanup ---
+        public void Dispose()
+        {
+            if (_disposed) return;
+            DetachComEvents();
+
+            // Explicitly release COM object(s)
+            ReleaseComObject(_dyn);            
+            ReleaseComObject(_item);            
+            ReleaseComObject(_comEvents);
+            
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion Public Methods
+
+        #region Event Bridging
+
+        #region C# Events
 
         // C# Events (bridged from COM)
         public event IItem.AttachmentAddEventHandler AttachmentAdd;
@@ -50,141 +253,32 @@ namespace Gsync.OutlookInterop.Item
         public event IItem.ReadEventHandler Read;
         public event IItem.WriteEventHandler Write;
 
-        public OutlookItemWrapper(object item)
-        {
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
+        #endregion C# Events
 
-            var type = OutlookItemType.GetType(item);
-            string name = type.Name;
+        #region COM Event Handlers => Invoke C# Events
 
-            if (!SupportedTypes.Contains(name))
-                throw new ArgumentException($"Object type '{name}' is not a supported Outlook item type.");
+        // Holder for COM event handlers that invoke C# events
+        private readonly List<Delegate> _eventHandlers = new();
 
-            _item = item;
-            _itemType = type;
+        // COM event handlers that raise .NET events
+        private void OnAttachmentAdd(Attachment attachment) => AttachmentAdd?.Invoke(attachment);
+        private void OnAttachmentRead(Attachment attachment) => AttachmentRead?.Invoke(attachment);
+        private void OnAttachmentRemove(Attachment attachment) => AttachmentRemove?.Invoke(attachment);
+        private void OnBeforeDelete(object item, ref bool cancel) => BeforeDelete?.Invoke(item, ref cancel);
+        private void OnCloseEvent(ref bool cancel) => CloseEvent?.Invoke(ref cancel);
+        private void OnOpen(ref bool cancel) => Open?.Invoke(ref cancel);
+        private void OnPropertyChange(string name) => PropertyChange?.Invoke(name);
+        private void OnRead() => Read?.Invoke();
+        private void OnWrite(ref bool cancel) => Write?.Invoke(ref cancel);
 
-            // Set up COM event bridge
-            AttachComEvents();
-        }
+        #endregion COM Event Handlers => Invoke C# Events
+
+        #region Wire and Unwire Bridge COM Event Handlers
         
-        #region Forward Properties
-
-        // Forward properties (expand as needed)
-        public Application Application => (Application)_itemType.GetProperty("Application")?.GetValue(_item);
-        public Attachments Attachments => (Attachments)_itemType.GetProperty("Attachments")?.GetValue(_item);
-
-        public string BillingInformation
-        {
-            get => (string)_itemType.GetProperty("BillingInformation")?.GetValue(_item);
-            set => _itemType.GetProperty("BillingInformation")?.SetValue(_item, value);
-        }
-
-        public string Body
-        {
-            get => (string)_itemType.GetProperty("Body")?.GetValue(_item);
-            set => _itemType.GetProperty("Body")?.SetValue(_item, value);
-        }
-
-        public string Categories
-        {
-            get => (string)_itemType.GetProperty("Categories")?.GetValue(_item);
-            set => _itemType.GetProperty("Categories")?.SetValue(_item, value);
-        }
-
-        public OlObjectClass Class => (OlObjectClass)_itemType.GetProperty("Class")?.GetValue(_item);
-        public string Companies
-        {
-            get => (string)_itemType.GetProperty("Companies")?.GetValue(_item);
-            set => _itemType.GetProperty("Companies")?.SetValue(_item, value);
-        }
-        public string ConversationID => (string)_itemType.GetProperty("ConversationID")?.GetValue(_item);
-        public DateTime CreationTime => (DateTime)_itemType.GetProperty("CreationTime")?.GetValue(_item);
-        public string EntryID => (string)_itemType.GetProperty("EntryID")?.GetValue(_item);
-
-        public string HTMLBody
-        {
-            get => (string)_itemType.GetProperty("HTMLBody")?.GetValue(_item);
-            set => _itemType.GetProperty("HTMLBody")?.SetValue(_item, value);
-        }
-
-        public OlImportance Importance
-        {
-            get => (OlImportance)_itemType.GetProperty("Importance")?.GetValue(_item);
-            set => _itemType.GetProperty("Importance")?.SetValue(_item, value);
-        }
-
-        public ItemProperties ItemProperties => (ItemProperties)_itemType.GetProperty("ItemProperties")?.GetValue(_item);
-        public DateTime LastModificationTime => (DateTime)_itemType.GetProperty("LastModificationTime")?.GetValue(_item);
-        public string MessageClass => (string)_itemType.GetProperty("MessageClass")?.GetValue(_item);
-
-        public string Mileage
-        {
-            get => (string)_itemType.GetProperty("Mileage")?.GetValue(_item);
-            set => _itemType.GetProperty("Mileage")?.SetValue(_item, value);
-        }
-
-        public bool NoAging
-        {
-            get => (bool)_itemType.GetProperty("NoAging")?.GetValue(_item);
-            set => _itemType.GetProperty("NoAging")?.SetValue(_item, value);
-        }
-
-        public int OutlookInternalVersion => (int)_itemType.GetProperty("OutlookInternalVersion")?.GetValue(_item);
-        public string OutlookVersion => (string)_itemType.GetProperty("OutlookVersion")?.GetValue(_item);
-        public object Parent => _itemType.GetProperty("Parent")?.GetValue(_item);
-        public bool Saved => (bool)_itemType.GetProperty("Saved")?.GetValue(_item);
-        public string SenderEmailAddress => (string)_itemType.GetProperty("SenderEmailAddress")?.GetValue(_item);
-        public string SenderName => (string)_itemType.GetProperty("SenderName")?.GetValue(_item);
-
-        public OlSensitivity Sensitivity
-        {
-            get => (OlSensitivity)_itemType.GetProperty("Sensitivity")?.GetValue(_item);
-            set => _itemType.GetProperty("Sensitivity")?.SetValue(_item, value);
-        }
-
-        public NameSpace Session => (NameSpace)_itemType.GetProperty("Session")?.GetValue(_item);
-        public int Size => (int)_itemType.GetProperty("Size")?.GetValue(_item);
-
-        public string Subject
-        {
-            get => (string)_itemType.GetProperty("Subject")?.GetValue(_item);
-            set => _itemType.GetProperty("Subject")?.SetValue(_item, value);
-        }
-
-        public bool UnRead
-        {
-            get => (bool)_itemType.GetProperty("UnRead")?.GetValue(_item);
-            set => _itemType.GetProperty("UnRead")?.SetValue(_item, value);
-        }
-
-        #endregion Forward Properties
-
-        #region Methods
-
-        // Methods
-        public void Close(OlInspectorClose SaveMode) => _itemType.GetMethod("Close")?.Invoke(_item, new object[] { SaveMode });
-        public object Copy() => _itemType.GetMethod("Copy")?.Invoke(_item, null);
-        public void Delete() => _itemType.GetMethod("Delete")?.Invoke(_item, null);
-
-        public void Display(object Modal = null) =>
-            _itemType.GetMethod("Display")?.Invoke(_item, Modal != null ? new[] { Modal } : null);
-
-        public object Move(MAPIFolder DestFldr) => _itemType.GetMethod("Move")?.Invoke(_item, new object[] { DestFldr });
-        public void PrintOut() => _itemType.GetMethod("PrintOut")?.Invoke(_item, null);
-        public void Save() => _itemType.GetMethod("Save")?.Invoke(_item, null);
-
-        public void SaveAs(string Path, object Type = null) =>
-            _itemType.GetMethod("SaveAs")?.Invoke(_item, Type != null ? new object[] { Path, Type } : new object[] { Path });
-
-        public void ShowCategoriesDialog() => _itemType.GetMethod("ShowCategoriesDialog")?.Invoke(_item, null);
-
-        // --- Event Bridging ---
+        private ItemEvents_10_Event _comEvents;
 
         private void AttachComEvents()
-        {
-            // This casts to the ItemEvents_10_Event interface generated by interop
-            _comEvents = _item as ItemEvents_10_Event;
+        {            
             if (_comEvents == null) return;
 
             // Wire each COM event to .NET event
@@ -228,48 +322,43 @@ namespace Gsync.OutlookInterop.Item
             _comEvents.Write -= OnWrite;
         }
 
-        // COM event handlers that raise .NET events
-        private void OnAttachmentAdd(Attachment attachment) => AttachmentAdd?.Invoke(attachment);
-        private void OnAttachmentRead(Attachment attachment) => AttachmentRead?.Invoke(attachment);
-        private void OnAttachmentRemove(Attachment attachment) => AttachmentRemove?.Invoke(attachment);
-        private void OnBeforeDelete(object item, ref bool cancel) => BeforeDelete?.Invoke(item, ref cancel);
-        private void OnCloseEvent(ref bool cancel) => CloseEvent?.Invoke(ref cancel);
-        private void OnOpen(ref bool cancel) => Open?.Invoke(ref cancel);
-        private void OnPropertyChange(string name) => PropertyChange?.Invoke(name);
-        private void OnRead() => Read?.Invoke();
-        private void OnWrite(ref bool cancel) => Write?.Invoke(ref cancel);
+        #endregion Wire and Unwire Bridge COM Event Handlers
 
-        // --- IDisposable support for event cleanup ---
-        public void Dispose()
+        #endregion Event Bridging
+
+        #region Private Helper Methods
+
+        // --- Helper safe wrappers ---
+        protected virtual bool IsComObjectFunc(object obj)
         {
-            if (_disposed) return;
-            DetachComEvents();
-
-            // Explicitly release COM object(s)
-            if (_item != null && Marshal.IsComObject(_item))
-            {
-                try { Marshal.ReleaseComObject(_item); } catch { }
-            }
-            if (_comEvents != null && Marshal.IsComObject(_comEvents))
-            {
-                try { Marshal.ReleaseComObject(_comEvents); } catch { }
-            }
-            _disposed = true;
-            GC.SuppressFinalize(this);
+            if (obj is null) { return false; }
+            else { return Marshal.IsComObject(obj); }
         }
+        protected virtual void ReleaseComObject(object comObj)
+        {
+            if (comObj != null && IsComObjectFunc(comObj))
+                Marshal.ReleaseComObject(comObj);
+        }
+        private T TryGet<T>(Func<T> getter)
+        {
+            try { return getter(); }
+            catch (System.Exception ex)
+            {
+                logger.Error($"Exception in TryGet<{typeof(T).Name}>: {ex.Message}", ex);
+                return default;
+            }
+        }
+        private void TrySet(System.Action setter)
+        {
+            try { setter(); }
+            catch (System.Exception ex)
+            {
+                logger.Error($"Exception in TrySet: {ex.Message}", ex);
+            }
+        }
+                
+        #endregion Private Helper Methods
 
-        #endregion Methods
-
-        // Delegates for event bridging (must match ItemEvents_10_Event signatures)
-        //public delegate void AttachmentAddEventHandler(Attachment attachment);
-        //public delegate void AttachmentReadEventHandler(Attachment attachment);
-        //public delegate void AttachmentRemoveEventHandler(Attachment attachment);
-        //public delegate void BeforeDeleteEventHandler(object item, ref bool cancel);
-        //public delegate void CloseEventHandler();
-        //public delegate void OpenEventHandler(ref bool cancel);
-        //public delegate void PropertyChangeEventHandler(string name);
-        //public delegate void ReadEventHandler();
-        //public delegate void WriteEventHandler(ref bool cancel);
     }
 
 }
