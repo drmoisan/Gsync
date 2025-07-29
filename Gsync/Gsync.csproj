@@ -184,7 +184,20 @@
     <Compile Include="OutlookInterop\Item\OutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\MonoExtension.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\NLogTraceWriter.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverter.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\WrapperScoDictionary.cs" />
     <Compile Include="Utilities\Interfaces\IOutlookCommonItem.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\IConcurrentDictionary.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\IConcurrentObservableDictionary.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\IDictionaryObserver.cs" />
+    <Compile Include="Utilities\Interfaces\IReusableTypes\IScoDictionaryNew.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\ConcurrentObservableDictionary.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\DictionaryChangedEventArgs.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\SimpleActionDictionaryObserver.cs" />
+    <Compile Include="Utilities\ReusableTypes\Serializable\Concurrent\Observable\ScoDictionaryNew.cs" />
+    <Compile Include="Utilities\ReusableTypes\Serializable\Concurrent\Observable\ScoDictionaryStatic.cs" />
     <Compile Include="Utilities\Threading\UiTask.cs" />
     <Compile Include="_Ribbon\DevelopmentMethods.cs" />
     <Compile Include="_Ribbon\RibbonGsync.cs" />
@@ -341,6 +354,9 @@
   <ItemGroup>
     <PackageReference Include="log4net">
       <Version>3.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Mono.Reflection">
+      <Version>2.0.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>

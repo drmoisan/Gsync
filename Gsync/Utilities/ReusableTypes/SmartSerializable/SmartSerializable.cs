@@ -1,19 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 using Gsync.Utilities.Extensions;
 using Gsync.Utilities.HelperClasses;
 using Gsync.Utilities.Interfaces;
-using Gsync.Utilities.HelperClasses.NewtonSoft;
 using Gsync.Utilities.Threading;
 using Gsync.Utilities.Dialogs;
 

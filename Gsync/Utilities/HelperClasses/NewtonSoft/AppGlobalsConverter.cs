@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Gsync.Utilities.Interfaces;
+using Gsync.Utilities.ReusableTypes;
 
 namespace Gsync.Utilities.HelperClasses.NewtonSoft
 {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Gsync.Utilities.Interfaces;
 using Gsync.Utilities.Extensions;
+using Gsync.Utilities.ReusableTypes;
 
 
 namespace Gsync.Utilities.HelperClasses.NewtonSoft
