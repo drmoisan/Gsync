@@ -56,6 +56,7 @@
     <Compile Include="AppGlobals\AppFileSystemFolderPathsTests.cs" />
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\DynamicMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\DetachedMailItemTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemTypeTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\SetMemberBinderImpl.cs" />

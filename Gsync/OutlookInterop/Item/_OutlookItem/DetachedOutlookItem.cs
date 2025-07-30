@@ -56,6 +56,8 @@ namespace Gsync.OutlookInterop.Item
 
         public string StoreID { get; set; }
 
+        public DetachedOutlookItem() { }
+        
         // --- Constructor: copies value properties, nullifies COM-typed properties ---
         public DetachedOutlookItem(IItem item)
         {

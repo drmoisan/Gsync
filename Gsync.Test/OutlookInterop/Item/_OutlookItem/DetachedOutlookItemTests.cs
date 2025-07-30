@@ -49,6 +49,13 @@ namespace Gsync.Test.OutlookInterop.Item
         }
 
         [TestMethod]
+        public void Constructor_Parameterless_NotNull()
+        {
+            var detached = new DetachedOutlookItem();
+            Assert.IsNotNull(detached);
+        }
+
+        [TestMethod]
         public void Constructor_CopiesValueProperties()
         {
             var mock = CreateMockItem();
