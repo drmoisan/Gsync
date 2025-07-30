@@ -180,11 +180,10 @@
     <Compile Include="AppGlobals\AppStagingFilenames.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IItem.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IMailItem.cs" />
-    <Compile Include="OutlookInterop\Item\MailItemWrapper.cs" />
-    <Compile Include="OutlookInterop\Item\OutlookItemLooseWrapper.cs" />
-    <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
-    <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
-    <Compile Include="OutlookInterop\Item\StubMailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemType.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapper.cs" />
     <Compile Include="Utilities\HelperClasses\DefaultDirectory.cs" />
     <Compile Include="Utilities\HelperClasses\DefaultEnvironment.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\MonoExtension.cs" />

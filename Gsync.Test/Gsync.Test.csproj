@@ -55,15 +55,16 @@
   <ItemGroup>
     <Compile Include="AppGlobals\AppFileSystemFolderPathsTests.cs" />
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
-    <Compile Include="OutlookInterop\DynamicMailItem.cs" />
-    <Compile Include="OutlookInterop\OutlookItemTypeTests.cs" />
-    <Compile Include="OutlookInterop\OutlookItemWrapperTests.cs" />
-    <Compile Include="OutlookInterop\SetMemberBinderImpl.cs" />
-    <Compile Include="OutlookInterop\TestableMailItemWrapper.cs" />
-    <Compile Include="OutlookInterop\TestableOutlookItemLooseWrapper.cs" />
-    <Compile Include="OutlookInterop\TestableOutlookItemWrapper.cs" />
-    <Compile Include="OutlookInterop\OutlookItemLooseWrapperTests.cs" />
-    <Compile Include="OutlookInterop\MailItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\DynamicMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemTypeTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\SetMemberBinderImpl.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\StubMailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\TestableMailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\TestableOutlookItemLooseWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\TestableOutlookItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Extensions\CompilerServices\CallerArgumentExpressionAttributeTests.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
