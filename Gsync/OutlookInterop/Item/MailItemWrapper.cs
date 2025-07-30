@@ -24,6 +24,7 @@ namespace Gsync.OutlookInterop.Item
         protected MailItemWrapper(object item, ItemEvents_10_Event comEvents)
             : base(item, comEvents)
         {
+            Init();
             _mailItem = (item as MailItem).ThrowIfNull($"Cannot cast item to {nameof(MailItem)}");
             AttachMailItemEvents();
         }
@@ -31,6 +32,7 @@ namespace Gsync.OutlookInterop.Item
         protected MailItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
             : base(item, comEvents, supportedTypes)
         {
+            Init();
             _mailItem = (item as MailItem).ThrowIfNull($"Cannot cast item to {nameof(MailItem)}");
             AttachMailItemEvents();
         }
@@ -38,11 +40,12 @@ namespace Gsync.OutlookInterop.Item
         public MailItemWrapper(OutlookItemWrapper baseWrapper)
             : base(baseWrapper.InnerObject, GetCom10Events(baseWrapper), baseWrapper.SupportedTypes)
         {
+            Init();
             _mailItem = (baseWrapper.InnerObject as MailItem).ThrowIfNull($"Cannot cast item to {nameof(MailItem)}");
             AttachMailItemEvents();
         }
                 
-        private static ItemEvents_10_Event GetCom10Events(OutlookItemWrapper wrapper)
+        internal static ItemEvents_10_Event GetCom10Events(OutlookItemWrapper wrapper)
         {
             var field = typeof(OutlookItemWrapper).GetField("_comEvents", BindingFlags.NonPublic | BindingFlags.Instance);
             return (ItemEvents_10_Event)field?.GetValue(wrapper);
@@ -166,7 +169,7 @@ namespace Gsync.OutlookInterop.Item
 
         // --- Attach/Detach pattern for event bridging ---
 
-        private void AttachMailItemEvents()
+        protected virtual void AttachMailItemEvents()
         {
             if (_mailItemEventsAttached) return;
             _mailItem = _item as MailItem;

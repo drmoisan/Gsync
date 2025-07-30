@@ -57,6 +57,8 @@
     <Compile Include="OutlookInterop\DynamicMailItem.cs" />
     <Compile Include="OutlookInterop\OutlookItemTypeTests.cs" />
     <Compile Include="OutlookInterop\OutlookItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\SetMemberBinderImpl.cs" />
+    <Compile Include="OutlookInterop\TestableMailItemWrapper.cs" />
     <Compile Include="OutlookInterop\TestableOutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\TestableOutlookItemWrapper.cs" />
     <Compile Include="OutlookInterop\OutlookItemLooseWrapperTests.cs" />

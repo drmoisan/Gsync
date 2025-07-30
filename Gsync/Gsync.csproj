@@ -184,6 +184,7 @@
     <Compile Include="OutlookInterop\Item\OutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\StubMailItemWrapper.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\MonoExtension.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\NLogTraceWriter.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverter.cs" />
