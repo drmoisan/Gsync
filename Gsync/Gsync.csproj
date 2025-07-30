@@ -185,10 +185,14 @@
     <Compile Include="OutlookInterop\Item\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\OutlookItemWrapper.cs" />
     <Compile Include="OutlookInterop\Item\StubMailItemWrapper.cs" />
+    <Compile Include="Utilities\HelperClasses\DefaultDirectory.cs" />
+    <Compile Include="Utilities\HelperClasses\DefaultEnvironment.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\MonoExtension.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\NLogTraceWriter.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverter.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\WrapperScoDictionary.cs" />
+    <Compile Include="Utilities\Interfaces\IHelperClasses\IDirectory.cs" />
+    <Compile Include="Utilities\Interfaces\IHelperClasses\IEnvironment.cs" />
     <Compile Include="Utilities\Interfaces\IHelperClasses\IFileSystem.cs" />
     <Compile Include="Utilities\Interfaces\IHelperClasses\IUserDialog.cs" />
     <Compile Include="Utilities\Interfaces\IOutlookCommonItem.cs" />

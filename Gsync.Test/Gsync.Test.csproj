@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppGlobals\AppFileSystemFolderPathsTests.cs" />
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\DynamicMailItem.cs" />
     <Compile Include="OutlookInterop\OutlookItemTypeTests.cs" />

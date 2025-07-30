@@ -7,14 +7,24 @@ using System.Threading.Tasks;
 using Gsync.Utilities.Interfaces;
 using Gsync.Utilities.Extensions;
 using Gsync.Utilities.HelperClasses;
+using Gsync.Utilities.Interfaces.IHelperClasses;
 
 namespace Gsync
 {
 
     public class AppFileSystemFolderPaths : IFileSystemFolderPaths
-    {       
-        public AppFileSystemFolderPaths()
+    {
+        private readonly IEnvironment _environment;
+        private readonly IDirectory _directory;
+
+        public AppFileSystemFolderPaths() : this(new DefaultEnvironment(), new DefaultDirectory()) { }
+
+        public AppFileSystemFolderPaths(IEnvironment environment) : this(environment, new DefaultDirectory()) { }
+
+        public AppFileSystemFolderPaths(IEnvironment environment, IDirectory directory)
         {
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _directory = directory ?? throw new ArgumentNullException(nameof(directory));
             LoadFolders();
             _filenames = new AppStagingFilenames();
         }
@@ -40,17 +50,17 @@ namespace Gsync
                 
         private void CreateMissingPaths(string filepath)
         {
-            if (!Directory.Exists(filepath))
+            if (!_directory.Exists(filepath))
             {
-                Directory.CreateDirectory(filepath);
+                _directory.CreateDirectory(filepath);
             }
         }
 
         async private Task CreateMissingPathsAsync(string filepath)
         {
-            if (!Directory.Exists(filepath))
+            if (!_directory.Exists(filepath))
             {
-                await Task.Run(()=> Directory.CreateDirectory(filepath));
+                await Task.Run(() => _directory.CreateDirectory(filepath));
             }
         }
 
@@ -112,24 +122,24 @@ namespace Gsync
         private void LoadFolders()
         {
             SpecialFolders = [];
-            TryAddSpecialFolder("AppData", () => [Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(Gsync)]);
-            TryAddSpecialFolder("MyDocuments", () => [Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)]);
-            TryAddSpecialFolder("UserProfile", () => [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)]);
-            TryAddSpecialFolder("MyComputer", () => [Environment.GetFolderPath(Environment.SpecialFolder.MyComputer)]);
-            TryAddSpecialFolder("Favorites", () => [Environment.GetFolderPath(Environment.SpecialFolder.Favorites)]);
-            TryAddSpecialFolder("Personal", () => [Environment.GetFolderPath(Environment.SpecialFolder.Personal)]);
-            TryAddSpecialFolder("ApplicationData", () => [Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)]);
-            TryAddSpecialFolder("Desktop", () => [Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)]);
-            TryAddSpecialFolder("NetworkShortcuts", () => [Environment.GetFolderPath(Environment.SpecialFolder.NetworkShortcuts)]);            
-            if (!TryAddSpecialFolder("OneDrivePersonal", () => [Environment.GetEnvironmentVariable("OneDriveConsumer")])) 
+            TryAddSpecialFolder("AppData", () => [_environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(Gsync)]);
+            TryAddSpecialFolder("MyDocuments", () => [_environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)]);
+            TryAddSpecialFolder("UserProfile", () => [_environment.GetFolderPath(Environment.SpecialFolder.UserProfile)]);
+            TryAddSpecialFolder("MyComputer", () => [_environment.GetFolderPath(Environment.SpecialFolder.MyComputer)]);
+            TryAddSpecialFolder("Favorites", () => [_environment.GetFolderPath(Environment.SpecialFolder.Favorites)]);
+            TryAddSpecialFolder("Personal", () => [_environment.GetFolderPath(Environment.SpecialFolder.Personal)]);
+            TryAddSpecialFolder("ApplicationData", () => [_environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)]);
+            TryAddSpecialFolder("Desktop", () => [_environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)]);
+            TryAddSpecialFolder("NetworkShortcuts", () => [_environment.GetFolderPath(Environment.SpecialFolder.NetworkShortcuts)]);            
+            if (!TryAddSpecialFolder("OneDrivePersonal", () => [_environment.GetEnvironmentVariable("OneDriveConsumer")])) 
             {
-                TryAddSpecialFolder("OneDrivePersonal", () => [Environment.GetEnvironmentVariable("OneDrivePersonal")]);
+                TryAddSpecialFolder("OneDrivePersonal", () => [_environment.GetEnvironmentVariable("OneDrivePersonal")]);
             }
-            if (!TryAddSpecialFolder("OneDrive", () => [Environment.GetEnvironmentVariable("OneDriveCommercial")])) 
+            if (!TryAddSpecialFolder("OneDrive", () => [_environment.GetEnvironmentVariable("OneDriveCommercial")])) 
             {
-                if (!TryAddSpecialFolder("OneDrive", () => [Environment.GetEnvironmentVariable("OneDrive")])) 
+                if (!TryAddSpecialFolder("OneDrive", () => [_environment.GetEnvironmentVariable("OneDrive")])) 
                 {
-                    if (!TryAddSpecialFolder("OneDrive", () => [Environment.GetEnvironmentVariable("OneDrivePersonal")])) 
+                    if (!TryAddSpecialFolder("OneDrive", () => [_environment.GetEnvironmentVariable("OneDrivePersonal")])) 
                     {
                         if(SpecialFolders.Count > 0) 
                         {
@@ -150,8 +160,8 @@ namespace Gsync
             TryAddSpecialFolder("Flow", [oneDrive, "Email attachments from Flow"]);
             SpecialFolders.TryGetValue("Flow", out var flow);
             TryAddSpecialFolder("PreReads", [oneDrive, "_  Workflow", "_ Pre-Reads"]);
-            TryAddSpecialFolder("System", () => [Environment.GetFolderPath(Environment.SpecialFolder.System)]);
-            TryAddSpecialFolder("Root", () => [Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.System))]);
+            TryAddSpecialFolder("System", () => [_environment.GetFolderPath(Environment.SpecialFolder.System)]);
+            TryAddSpecialFolder("Root", () => [Path.GetPathRoot(_environment.GetFolderPath(Environment.SpecialFolder.System))]);
             
             if (SpecialFolders.TryGetValue("MyDocuments", out var myDocuments))
             {
