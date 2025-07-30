@@ -181,6 +181,7 @@
     <Compile Include="OutlookInterop\Interfaces\Items\IItem.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IMailItem.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\DetachedOutlookItem.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapper.cs" />

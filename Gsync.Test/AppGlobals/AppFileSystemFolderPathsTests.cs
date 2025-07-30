@@ -97,7 +97,7 @@ namespace Gsync.Test.AppGlobals
         }
 
         [TestMethod]
-        public async Task LoadAsync_ShouldReturnInitializedInstance()
+        public void Load_ShouldReturnInitializedInstance()
         {
             // Patch: LoadAsync uses default env, so test only the sync path for DI
             var sut = new AppFileSystemFolderPaths(_envMock.Object, _dirMock.Object);

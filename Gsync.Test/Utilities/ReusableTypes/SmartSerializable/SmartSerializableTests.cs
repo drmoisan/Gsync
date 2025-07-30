@@ -881,7 +881,7 @@ namespace Gsync.Test.Utilities.ReusableTypes.SmartSerializable
         {
             // Arrange
             var path = "somepath.json";
-            var wasRequestCalled = false;
+            
             // Swap out the RequestSerialization method with a delegate to capture the call.
             var sut = new SmartSerializable<TestConfig>(new TestConfig())
             {

@@ -1,9 +1,8 @@
-﻿using Gsync.OutlookInterop.Interfaces.Items;
+﻿using FluentAssertions;
 using Gsync.OutlookInterop.Item;
 using Gsync.Utilities.HelperClasses;
 using log4net.Appender;
 using log4net.Core;
-using log4net.Repository.Hierarchy;
 using Microsoft.Office.Interop.Outlook;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Gsync.Test.OutlookInterop.Item
@@ -376,7 +376,7 @@ namespace Gsync.Test.OutlookInterop.Item
         }
 
         [TestMethod]
-        public void Close_WhenInvokeThrows_LogsError()
+        public void Close_WhenItemNull_Throws()
         {
             // Arrange
             var dummy = new DummyWithWrongClose();
@@ -389,24 +389,37 @@ namespace Gsync.Test.OutlookInterop.Item
             var mockEvents = new Mock<ItemEvents_10_Event>();
 
             var wrapper = new TestableOutlookItemWrapper(dummy, mockEvents.Object, supportedTypes);
-            //var wrapper = new OutlookItemWrapper(dummy);
-
-            // Set up log4net memory appender
-            var memoryAppender = new MemoryAppender();
-            log4net.Config.BasicConfigurator.Configure(memoryAppender);
+            wrapper.Set_item(null); // Set item to null to simulate the condition
 
             // Act
-            wrapper.Close(OlInspectorClose.olDiscard);
+            System.Action act = () => wrapper.Close(OlInspectorClose.olDiscard);
 
-            // Assert: an error log was created
-            var errorEvents = memoryAppender.GetEvents()
-                .Where(ev => ev.Level == Level.Error &&
-                             ev.RenderedMessage.Contains("Error closing item"))
-                .ToList();
+            // Assert: 
+            act.Should().Throw<ArgumentNullException>();
+        }
 
-            Assert.IsTrue(errorEvents.Any(),
-                "Expected error log for exception in Close.");
+        [TestMethod]
+        public void Close_WhenMethodNotFound_Throws()
+        {
+            // Arrange
+            var dummy = new DummyWithWrongClose();
 
+            var dummyTypeName = dummy.GetType().Name;
+            var supportedTypes = new HashSet<string>
+            {
+                dummyTypeName
+            }.ToImmutableHashSet();
+            var mockEvents = new Mock<ItemEvents_10_Event>();
+
+            var wrapper = new TestableOutlookItemWrapper(dummy, mockEvents.Object, supportedTypes);            
+                        
+            // Act
+            System.Action act = () => wrapper.Close(OlInspectorClose.olDiscard);
+
+            // Assert: 
+            act.Should().Throw<InvalidOperationException>();
+            //act.Should().Throw<TargetInvocationException>().Which
+            //    .InnerException.Should().BeOfType<InvalidOperationException>();
         }
 
         [TestMethod]
@@ -491,40 +504,23 @@ namespace Gsync.Test.OutlookInterop.Item
         }
 
         [TestMethod]
-        public void TryGet_LogsExceptionAndReturnsDefault()
+        [ExpectedException(typeof(COMException))]
+        public void Property_AccessThrowsException_IsPropagated()
         {
             var mock = CreateMailItemMock();
-            // Simulate exception on property access            
-            var mockException = new Mock<COMException>();
-            mockException.SetupAllProperties();
-            mockException.Setup(m => m.Message).Returns("Test exception").Verifiable();
-            mockException.Setup(m => m.ErrorCode).Returns(80004005); // E_FAIL
-            mock.Setup(m => m.Application).Throws(mockException.Object);            
+            mock.Setup(m => m.Application).Throws(new COMException("fail!"));
             var wrapper = CreateWrapper(mock);
-
-            // Should not throw, should return default (null for Application)
-            var result = wrapper.Application;
-            Assert.IsNull(result);
-            mockException.Verify(m => m.Message, Times.AtLeastOnce);
+            var unused = wrapper.Application;
         }
 
         [TestMethod]
-        public void TrySet_LogsExceptionAndDoesNotThrow()
+        [ExpectedException(typeof(COMException))]
+        public void Property_SetThrowsException_IsPropagated()
         {
             var mock = CreateMailItemMock();
-
-            // Simulate exception on property set
-            var mockException = new Mock<COMException>();
-            mockException.SetupAllProperties();
-            mockException.Setup(m => m.Message).Returns("Test exception").Verifiable();
-            mockException.Setup(m => m.ErrorCode).Returns(80004005); // E_FAIL
-            mock.SetupSet(m => m.Body = It.IsAny<string>()).Throws(mockException.Object);
+            mock.SetupSet(m => m.Body = It.IsAny<string>()).Throws(new COMException("fail!"));
             var wrapper = CreateWrapper(mock);
-
-            // Should not throw
-            wrapper.Body = "ShouldNotThrow";
-            // No assertion needed: test passes if no exception is thrown
-            mockException.Verify(m => m.Message, Times.AtLeastOnce);
+            wrapper.Body = "Should throw";
         }
 
         [TestMethod]
@@ -729,8 +725,6 @@ namespace Gsync.Test.OutlookInterop.Item
             wrapper.InvokeOnWrite(ref cancel);
             Assert.IsTrue(called);
             Assert.IsTrue(cancel);
-        }
-                
+        }                
     }
-
 }

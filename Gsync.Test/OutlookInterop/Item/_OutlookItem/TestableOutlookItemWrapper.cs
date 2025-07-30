@@ -103,6 +103,11 @@ namespace Gsync.Test.OutlookInterop.Item
             return IsComObject;
         }
 
+        public void Set_item(object innerItem)
+        { 
+            base._item = innerItem;
+        }
+
     }
 
     public class DummyWithWrongClose
