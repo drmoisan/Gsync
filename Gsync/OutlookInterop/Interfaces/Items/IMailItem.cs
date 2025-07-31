@@ -1,9 +1,10 @@
 ﻿using Microsoft.Office.Interop.Outlook;
 using System;
+using System.Collections.Generic;
 
 namespace Gsync.OutlookInterop.Interfaces.Items
 {
-    public interface IMailItem : IItem
+    public interface IMailItem : IItem, IEquatable<IMailItem>
     {
         // --- Additional _MailItem properties ---
         string BCC { get; set; }
@@ -85,5 +86,7 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         public delegate void UnloadEventHandler();
         public delegate void BeforeAutoSaveEventHandler(ref bool Cancel);
         public delegate void BeforeReadEventHandler();
+
+        public new IEqualityComparer<IMailItem> EqualityComparer { get; set; }
     }
 }

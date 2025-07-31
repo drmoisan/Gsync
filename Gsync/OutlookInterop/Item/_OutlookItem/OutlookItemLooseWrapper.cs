@@ -1,23 +1,17 @@
-﻿using System;
+﻿using Gsync.OutlookInterop.Interfaces.Items;
+using Gsync.Utilities.Extensions;
+using log4net.Repository.Hierarchy;
+using Microsoft.Office.Interop.Outlook;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Immutable;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Gsync.OutlookInterop.Item
 {
-    using Gsync.OutlookInterop.Interfaces.Items;
-    using Gsync.Utilities.Extensions;
-    using log4net.Repository.Hierarchy;
-    using Microsoft.Office.Interop.Outlook;
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Collections.Immutable;
-    using System.Reflection;
-    using System.Runtime.InteropServices;
-
-    public class OutlookItemLooseWrapper : IItem, IDisposable
+    public class OutlookItemLooseWrapper : IItem, IDisposable, IEquatable<IItem>
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -67,9 +61,9 @@ namespace Gsync.OutlookInterop.Item
             return this;
         }
 
-
-
         #endregion ctor
+
+        #region OutlookItemLooseWrapper
 
         #region Private Fields and Properties
 
@@ -91,11 +85,46 @@ namespace Gsync.OutlookInterop.Item
             "TaskRequestItem", "TaskRequestAcceptItem", "TaskRequestDeclineItem", "TaskRequestUpdateItem"
         ]).ToImmutableHashSet();
 
-        internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();
-
         #endregion Private Fields and Properties
 
-        #region Properties
+        #region Private Helper Methods
+
+        // --- Helper safe wrappers ---
+        protected virtual bool IsComObjectFunc(object obj)
+        {
+            if (obj is null) { return false; }
+            else { return Marshal.IsComObject(obj); }
+        }
+        protected virtual void ReleaseComObject(object comObj)
+        {
+            if (comObj != null && IsComObjectFunc(comObj))
+                Marshal.ReleaseComObject(comObj);
+        }
+        private T TryGet<T>(Func<T> getter)
+        {
+            try { return getter(); }
+            catch (System.Exception ex)
+            {
+                logger.Error($"Exception in TryGet<{typeof(T).Name}>: {ex.Message}", ex);
+                return default;
+            }
+        }
+        private void TrySet(System.Action setter)
+        {
+            try { setter(); }
+            catch (System.Exception ex)
+            {
+                logger.Error($"Exception in TrySet: {ex.Message}", ex);
+            }
+        }
+
+        #endregion Private Helper Methods
+
+        #endregion OutlookItemLooseWrapper
+
+        #region IItem Implementation
+
+        #region IItem Properties Implementation
 
         // Forward properties (expand as needed)
         public Application Application => TryGet(() => (Application)_dyn.Application);
@@ -171,9 +200,10 @@ namespace Gsync.OutlookInterop.Item
             get => TryGet(() => (bool)_dyn.UnRead);
             set => TrySet(() => _dyn.UnRead = value);
         }
-        #endregion Properties
+        
+        #endregion IItem Properties Implementation
 
-        #region Public Methods
+        #region IItem Method Implementation
 
         // Methods        
         public void Close(OlInspectorClose SaveMode)
@@ -221,25 +251,9 @@ namespace Gsync.OutlookInterop.Item
             TrySet(() => _dyn.ShowCategoriesDialog());
         }
 
-
-        // --- IDisposable support for event cleanup ---
-        public void Dispose()
-        {
-            if (_disposed) return;
-            DetachComEvents();
-
-            // Explicitly release COM object(s)
-            ReleaseComObject(_dyn);
-            ReleaseComObject(_item);
-            ReleaseComObject(_comEvents);
-
-            _disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion Public Methods
-
-        #region Event Bridging
+        #endregion IItem Method Implementation
+        
+        #region IItem Event Implementation
 
         #region C# Events
 
@@ -260,7 +274,6 @@ namespace Gsync.OutlookInterop.Item
 
         // Holder for COM event handlers that invoke C# events
         private readonly List<Delegate> _eventHandlers = new();
-
         // COM event handlers that raise .NET events
         private void OnAttachmentAdd(Attachment attachment) => AttachmentAdd?.Invoke(attachment);
         private void OnAttachmentRead(Attachment attachment) => AttachmentRead?.Invoke(attachment);
@@ -277,7 +290,6 @@ namespace Gsync.OutlookInterop.Item
         #region Wire and Unwire Bridge COM Event Handlers
 
         private ItemEvents_10_Event _comEvents;
-
         private void AttachComEvents()
         {
             if (_comEvents == null) return;
@@ -307,7 +319,6 @@ namespace Gsync.OutlookInterop.Item
                 _eventHandlers.Add((IItem.WriteEventHandler)OnWrite);
             }
         }
-
         private void DetachComEvents()
         {
             if (_comEvents == null) return;
@@ -325,41 +336,69 @@ namespace Gsync.OutlookInterop.Item
 
         #endregion Wire and Unwire Bridge COM Event Handlers
 
-        #endregion Event Bridging
+        #endregion IItem Event Implementation
 
-        #region Private Helper Methods
+        #region IDisposable Implementation
 
-        // --- Helper safe wrappers ---
-        protected virtual bool IsComObjectFunc(object obj)
+        // --- IDisposable support for event cleanup ---
+        public void Dispose()
         {
-            if (obj is null) { return false; }
-            else { return Marshal.IsComObject(obj); }
-        }
-        protected virtual void ReleaseComObject(object comObj)
-        {
-            if (comObj != null && IsComObjectFunc(comObj))
-                Marshal.ReleaseComObject(comObj);
-        }
-        private T TryGet<T>(Func<T> getter)
-        {
-            try { return getter(); }
-            catch (System.Exception ex)
-            {
-                logger.Error($"Exception in TryGet<{typeof(T).Name}>: {ex.Message}", ex);
-                return default;
-            }
-        }
-        private void TrySet(System.Action setter)
-        {
-            try { setter(); }
-            catch (System.Exception ex)
-            {
-                logger.Error($"Exception in TrySet: {ex.Message}", ex);
-            }
+            if (_disposed) return;
+            DetachComEvents();
+
+            // Explicitly release COM object(s)
+            ReleaseComObject(_dyn);
+            ReleaseComObject(_item);
+            ReleaseComObject(_comEvents);
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
         }
 
-        #endregion Private Helper Methods
+        #endregion IDisposable Implementation
 
+        #region IEquatable<IItem> Implementation
+
+        internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();
+
+        // --- Equality Comparer for IEquatable<IItem> ---
+        private IEqualityComparer<IItem> _equalityComparer = new IItemEqualityComparer();
+        /// <summary>
+        /// Gets or sets the equality comparer used for IEquatable<IItem> implementation.
+        /// </summary>
+        public IEqualityComparer<IItem> EqualityComparer
+        {
+            get => _equalityComparer;
+            set => _equalityComparer = value ?? new IItemEqualityComparer();
+        }
+
+#nullable enable
+
+        /// <summary>
+        /// Implements IEquatable<IItem> using the injected or default IEqualityComparer<IItem>.
+        /// </summary>
+        public bool Equals(IItem? other)
+        {
+            return EqualityComparer.Equals(this, other);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is IItem item)
+                return Equals(item);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return EqualityComparer.GetHashCode(this);
+        }
+
+#nullable disable
+
+        #endregion IEquatable<IItem> Implementation
+
+        #endregion IItem Implementation
     }
-
 }

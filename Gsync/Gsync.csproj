@@ -181,8 +181,12 @@
     <Compile Include="OutlookInterop\Interfaces\Items\IItem.cs" />
     <Compile Include="OutlookInterop\Interfaces\Items\IMailItem.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\DetachedMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemEqualityComparer.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemSimilarityComparer.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapper.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\DetachedOutlookItem.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemSimilarityComparer.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemEqualityComparer.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapper.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapper.cs" />
@@ -203,9 +207,9 @@
     <Compile Include="Utilities\Interfaces\IReusableTypes\IScoDictionaryNew.cs" />
     <Compile Include="Utilities\Interfaces\IReusableTypes\ISmartSerializableLoader.cs" />
     <Compile Include="Utilities\Interfaces\ITimer\ITimerFactory.cs" />
-    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\ConcurrentObservableDictionary.cs" />
-    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\DictionaryChangedEventArgs.cs" />
-    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Disctionary\SimpleActionDictionaryObserver.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Dictionary\ConcurrentObservableDictionary.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Dictionary\DictionaryChangedEventArgs.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Dictionary\SimpleActionDictionaryObserver.cs" />
     <Compile Include="Utilities\ReusableTypes\Serializable\Concurrent\Observable\ScoDictionaryNew.cs" />
     <Compile Include="Utilities\ReusableTypes\Serializable\Concurrent\Observable\ScoDictionaryStatic.cs" />
     <Compile Include="Utilities\Threading\UiTask.cs" />

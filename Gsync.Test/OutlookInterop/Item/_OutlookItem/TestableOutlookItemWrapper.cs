@@ -24,6 +24,8 @@ namespace Gsync.Test.OutlookInterop.Item
         public TestableOutlookItemWrapper(object item, ItemEvents_10_Event events, ImmutableHashSet<string> supportedTypes)
             : base(item, events, supportedTypes) { Init(); }
 
+        public static ImmutableHashSet<string> GetDefaultTypes() => DefaultSupportedTypes;
+
         public void InvokeOnAttachmentAdd(Attachment a)
         {
             var bt = base.GetType().BaseType;

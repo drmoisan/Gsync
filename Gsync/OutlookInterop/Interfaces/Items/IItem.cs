@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Gsync.OutlookInterop.Interfaces.Items
 {
-    public interface IItem
+    public interface IItem: IEquatable<IItem>, IDisposable
     {
         // Properties
         Application Application { get; }
@@ -79,5 +79,7 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         delegate void PropertyChangeEventHandler(string name);
         delegate void ReadEventHandler();
         delegate void WriteEventHandler(ref bool cancel);
+
+        IEqualityComparer<IItem> EqualityComparer { get; set; }
     }
 }

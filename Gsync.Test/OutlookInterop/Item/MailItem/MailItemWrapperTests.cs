@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using FluentAssertions;
+using Gsync.OutlookInterop.Interfaces.Items;
+using Gsync.OutlookInterop.Item;
+using Microsoft.Office.Interop.Outlook;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using FluentAssertions;
-using Microsoft.Office.Interop.Outlook;
-using Gsync.OutlookInterop.Item;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 
 namespace Gsync.Test.OutlookInterop.Item
@@ -34,6 +36,13 @@ namespace Gsync.Test.OutlookInterop.Item
             // Inject _dynMailItem into private _dyn field
             var dynField = typeof(OutlookItemWrapper).GetField("_dyn", BindingFlags.NonPublic | BindingFlags.Instance);
             dynField.SetValue(_wrapper, _dynMailItem);
+        }
+
+        private Mock<MailItem> CreateMailItemMock()
+        {
+            var mock = new Mock<MailItem>();
+            mock.SetupAllProperties();
+            return mock;
         }
 
         // Property forwarding tests
@@ -330,6 +339,85 @@ namespace Gsync.Test.OutlookInterop.Item
             _wrapper.Dispose();
 
             ((bool)mailItemEventsAttachedField.GetValue(_wrapper)).Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void EqualityComparer_Default_IsMailItemEqualityComparer()
+        {
+            var mock = CreateMailItemMock();
+            var wrapper = new MailItemWrapper(mock.Object);
+            Assert.IsInstanceOfType(wrapper.EqualityComparer, typeof(MailItemEqualityComparer));
+        }
+
+        [TestMethod]
+        public void EqualityComparer_CanBeInjected_AndUsed()
+        {
+            var mock = CreateMailItemMock();
+            var customComparer = new Mock<IEqualityComparer<IMailItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IMailItem>(), It.IsAny<IMailItem>())).Returns(true);
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IMailItem>())).Returns(123);
+
+            var wrapper = new MailItemWrapper(mock.Object)
+            {
+                EqualityComparer = customComparer.Object
+            };
+
+            Assert.AreEqual(customComparer.Object, wrapper.EqualityComparer);
+
+            // Should use the injected comparer
+            Assert.IsTrue(wrapper.Equals((IItem)null));
+            Assert.AreEqual(123, wrapper.GetHashCode());
+        }
+
+        [TestMethod]
+        public void EqualsIItem_UsesEqualityComparer()
+        {
+            var mock = CreateMailItemMock();
+            var otherMock = CreateMailItemMock();
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+            var wrapper = new OutlookItemWrapper(mock.Object)
+            {
+                EqualityComparer = customComparer.Object
+            };
+            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
+
+            Assert.IsFalse(wrapper.Equals(otherWrapper));
+            customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
+        }
+
+        [TestMethod]
+        public void EqualsObject_UsesEqualityComparer()
+        {
+            var mock = CreateMailItemMock();
+            var otherMock = CreateMailItemMock();
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+
+            var wrapper = new OutlookItemWrapper(mock.Object)
+            {
+                EqualityComparer = customComparer.Object
+            };
+            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
+
+            Assert.IsTrue(wrapper.Equals((object)otherWrapper));
+            customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
+        }
+
+        [TestMethod]
+        public void GetHashCode_UsesEqualityComparer()
+        {
+            var mock = CreateMailItemMock();
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
+
+            var wrapper = new OutlookItemWrapper(mock.Object)
+            {
+                EqualityComparer = customComparer.Object
+            };
+
+            Assert.AreEqual(42, wrapper.GetHashCode());
+            customComparer.Verify(c => c.GetHashCode(wrapper), Times.Once);
         }
     }
 }

@@ -1,10 +1,11 @@
-﻿using Microsoft.Office.Interop.Outlook;
+﻿using Gsync.OutlookInterop.Item;
+using Gsync.OutlookInterop.Interfaces.Items;
+using Microsoft.Office.Interop.Outlook;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System;
-using Gsync.OutlookInterop.Item;
-using Gsync.OutlookInterop.Interfaces.Items;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace Gsync.Test.OutlookInterop.Item
 {
@@ -165,8 +166,6 @@ namespace Gsync.Test.OutlookInterop.Item
             detached.Write -= writeEventHandler;
         }
 
-
-
         [TestMethod]
         public void Serialization_IgnoresComReferences()
         {
@@ -252,6 +251,69 @@ namespace Gsync.Test.OutlookInterop.Item
             var wrapper = detached.Reattach(appMock.Object);
             Assert.IsNotNull(wrapper);
             Assert.AreSame(mailItemMock, wrapper.InnerObject);
+        }
+
+        [TestMethod]
+        public void EqualityComparer_Default_IsIItemEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem();
+            Assert.IsInstanceOfType(detached.EqualityComparer, typeof(IItemEqualityComparer));
+        }
+
+        [TestMethod]
+        public void EqualityComparer_CanBeInjected_AndUsed()
+        {
+            var detached = new DetachedOutlookItem();
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(123);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.AreEqual(customComparer.Object, detached.EqualityComparer);
+            Assert.IsTrue(detached.Equals((IItem)null));
+            Assert.AreEqual(123, detached.GetHashCode());
+        }
+
+        [TestMethod]
+        public void EqualsIItem_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var other = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.IsFalse(detached.Equals((IItem)other));
+            customComparer.Verify(c => c.Equals(detached, other), Times.Once);
+        }
+
+        [TestMethod]
+        public void EqualsObject_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var other = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.IsTrue(detached.Equals((object)other));
+            customComparer.Verify(c => c.Equals(detached, other), Times.Once);
+        }
+
+        [TestMethod]
+        public void GetHashCode_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.AreEqual(42, detached.GetHashCode());
+            customComparer.Verify(c => c.GetHashCode(detached), Times.Once);
         }
     }
 }

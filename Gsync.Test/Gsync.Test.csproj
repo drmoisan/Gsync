@@ -57,6 +57,10 @@
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\DynamicMailItem.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\DetachedMailItemTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemEqualityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemSimilarityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemEqualityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemSimilarityComparerTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemTypeTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\SetMemberBinderImpl.cs" />

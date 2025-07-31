@@ -1,14 +1,15 @@
-﻿using Microsoft.Office.Interop.Outlook;
+﻿using Gsync.OutlookInterop.Interfaces.Items;
+using Gsync.Utilities.Extensions;
+using Microsoft.Office.Interop.Outlook;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
-using Gsync.OutlookInterop.Interfaces.Items;
-using Gsync.Utilities.Extensions;
 
 namespace Gsync.OutlookInterop.Item
 {
     public class MailItemWrapper : OutlookItemWrapper, IMailItem
-    {
+    {                        
         private MailItem _mailItem;
         private bool _mailItemEventsAttached = false;
 
@@ -256,5 +257,45 @@ namespace Gsync.OutlookInterop.Item
 
         private void OnBeforeRead()
             => BeforeRead?.Invoke();
+
+        #region IEquatable<IMailItem> Implementation
+
+        private IEqualityComparer<IMailItem> _equalityComparer = new IItemEqualityComparer();
+        /// <summary>
+        /// Gets or sets the equality comparer used for IEquatable<IItem> implementation.
+        /// </summary>
+        public new IEqualityComparer<IMailItem> EqualityComparer
+        {
+            get => _equalityComparer;
+            set => _equalityComparer = value ?? new IItemEqualityComparer();
+        }
+
+#nullable enable
+
+        /// <summary>
+        /// Implements IEquatable<IItem> using the injected or default IEqualityComparer<IItem>.
+        /// </summary>
+        public bool Equals(IMailItem? other)
+        {
+            return EqualityComparer.Equals(this, other);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is IMailItem item)
+                return Equals(item);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return EqualityComparer.GetHashCode(this);
+        }
+
+#nullable disable
+
+        #endregion IEquatable<IMailItem> Implementation
+
     }
 }

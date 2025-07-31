@@ -2,6 +2,7 @@
 using System;
 using Gsync.OutlookInterop.Interfaces.Items;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Gsync.OutlookInterop.Item
 {
@@ -12,52 +13,10 @@ namespace Gsync.OutlookInterop.Item
     /// </summary>
     public class DetachedOutlookItem : IItem
     {
-        // --- COM reference properties: always null in detached object ---
-        [JsonIgnore]
-        public Application Application => null;
-        [JsonIgnore]
-        public Attachments Attachments => null;
-        [JsonIgnore]
-        public ItemProperties ItemProperties => null;
-        [JsonIgnore]
-        public NameSpace Session => null;
-        [JsonIgnore]
-        public object InnerObject => null;
-        [JsonIgnore]
-        public object Parent => null;
-
-        // --- Value & string properties ---
-        public string BillingInformation { get; set; }
-        public string Body { get; set; }
-        public string Categories { get; set; }
-        public OlObjectClass Class { get; set; }
-        public string Companies { get; set; }
-        public string ConversationID { get; set; }
-        public DateTime CreationTime { get; set; }
-        public string EntryID { get; set; }
-        public string HTMLBody { get; set; }
-        public OlImportance Importance { get; set; }
-        public DateTime LastModificationTime { get; set; }
-        public string MessageClass { get; set; }
-        public string Mileage { get; set; }
-        public bool NoAging { get; set; }
-        public int OutlookInternalVersion { get; set; }
-        public string OutlookVersion { get; set; }
-        public bool Saved { get; set; }
-        public string SenderEmailAddress { get; set; }
-        public string SenderName { get; set; }
-        public OlSensitivity Sensitivity { get; set; }
-        public int Size { get; set; }
-        public string Subject { get; set; }
-        public bool UnRead { get; set; }
-
-        // --- Optionally store parent folder ID for session-scoped reattachment ---
-        public string ParentFolderEntryID { get; set; }
-
-        public string StoreID { get; set; }
+        #region ctor
 
         public DetachedOutlookItem() { }
-        
+
         // --- Constructor: copies value properties, nullifies COM-typed properties ---
         public DetachedOutlookItem(IItem item)
         {
@@ -91,8 +50,11 @@ namespace Gsync.OutlookInterop.Item
             var folder = item.Parent as MAPIFolder;
             StoreID = folder?.StoreID;
             ParentFolderEntryID = folder?.EntryID;
-
         }
+
+        #endregion ctor
+
+        #region DetachedOutlookItem Methods
 
         /// <summary>
         /// Attempts to reattach to a live Outlook COM item using the provided NameSpace (session).
@@ -127,6 +89,54 @@ namespace Gsync.OutlookInterop.Item
             return new OutlookItemWrapper(comObject);
         }
 
+        #endregion DetachedOutlookItem Methods
+
+        #region IItem Implementation
+
+        #region IItem Properties Implementation
+
+        // --- COM reference properties: always null in detached object ---
+        [JsonIgnore] public Application Application => null;
+        [JsonIgnore] public Attachments Attachments => null;
+        [JsonIgnore] public ItemProperties ItemProperties => null;
+        [JsonIgnore] public NameSpace Session => null;
+        [JsonIgnore] public object InnerObject => null;
+        [JsonIgnore] public object Parent => null;
+
+        // --- Value & string properties ---
+        public string BillingInformation { get; set; }
+        public string Body { get; set; }
+        public string Categories { get; set; }
+        public OlObjectClass Class { get; set; }
+        public string Companies { get; set; }
+        public string ConversationID { get; set; }
+        public DateTime CreationTime { get; set; }
+        public string EntryID { get; set; }
+        public string HTMLBody { get; set; }
+        public OlImportance Importance { get; set; }
+        public DateTime LastModificationTime { get; set; }
+        public string MessageClass { get; set; }
+        public string Mileage { get; set; }
+        public bool NoAging { get; set; }
+        public int OutlookInternalVersion { get; set; }
+        public string OutlookVersion { get; set; }
+        public bool Saved { get; set; }
+        public string SenderEmailAddress { get; set; }
+        public string SenderName { get; set; }
+        public OlSensitivity Sensitivity { get; set; }
+        public int Size { get; set; }
+        public string Subject { get; set; }
+        public bool UnRead { get; set; }
+
+        // --- Optionally store parent folder ID for session-scoped reattachment ---
+        public string ParentFolderEntryID { get; set; }
+
+        public string StoreID { get; set; }
+
+        #endregion IItem Properties Implementation
+
+        #region IItem Methods Implementation
+
         // --- Methods: always throw NotSupportedException ---
         public void Close(OlInspectorClose SaveMode) =>
             throw new NotSupportedException("This DetachedOutlookItem is not connected to Outlook.");
@@ -155,6 +165,10 @@ namespace Gsync.OutlookInterop.Item
         public void ShowCategoriesDialog() =>
             throw new NotSupportedException("This DetachedOutlookItem is not connected to Outlook.");
 
+        #endregion IItem Methods Implementation
+
+        #region IItem Events Implementation
+
         // --- Events: No-ops. These events can never be raised on a detached object. ---        
         public event IItem.AttachmentAddEventHandler AttachmentAdd { add { } remove { } }
         public event IItem.AttachmentReadEventHandler AttachmentRead { add { } remove { } }
@@ -165,5 +179,68 @@ namespace Gsync.OutlookInterop.Item
         public event IItem.PropertyChangeEventHandler PropertyChange { add { } remove { } }
         public event IItem.ReadEventHandler Read { add { } remove { } }
         public event IItem.WriteEventHandler Write { add { } remove { } }
+
+        #endregion IItem Events Implementation
+
+        #region IEquatable<IItem> implementation
+
+        private IEqualityComparer<IItem> _equalityComparer = new IItemEqualityComparer();
+        /// <summary>
+        /// Gets or sets the equality comparer used for IEquatable<IItem> implementation.
+        /// </summary>
+        [JsonIgnore]
+        public IEqualityComparer<IItem> EqualityComparer
+        {
+            get => _equalityComparer;
+            set => _equalityComparer = value ?? new IItemEqualityComparer();
+        }
+
+#nullable enable
+
+        /// <summary>
+        /// Implements IEquatable<IItem> using the injected or default IEqualityComparer<IItem>.
+        /// </summary>
+        public bool Equals(IItem? other)
+        {
+            return EqualityComparer.Equals(this, other);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is IItem item)
+                return Equals(item);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return EqualityComparer.GetHashCode(this);
+        }
+
+#nullable disable
+
+        #endregion IEquatable<IItem> implementation
+
+        #region IDisposable Implementation
+
+        protected bool _disposed = false;
+
+        public virtual void Dispose()
+        {
+            if (_disposed) return;
+            //DetachComEvents();
+            //ReleaseComObject(_dyn);
+            //ReleaseComObject(_item);
+            //ReleaseComObject(_comEvents);
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion IDisposable Implementation
+
+        #endregion IItem Implementation
+
     }
 }

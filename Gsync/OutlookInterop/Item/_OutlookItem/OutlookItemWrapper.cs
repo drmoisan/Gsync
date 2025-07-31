@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace Gsync.OutlookInterop.Item
 {
-    public class OutlookItemWrapper : IItem, IDisposable
+    public class OutlookItemWrapper : IItem 
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
             MethodBase.GetCurrentMethod().DeclaringType);
@@ -57,30 +57,38 @@ namespace Gsync.OutlookInterop.Item
 
         #endregion ctor
 
-        #region Private Fields and Properties
+        #region OutlookItemWrapper
+
+        protected virtual bool IsComObjectFunc(object obj)
+        {
+            if (obj is null) { return false; }
+            else { return Marshal.IsComObject(obj); }
+        }
+        protected virtual void ReleaseComObject(object comObj)
+        {
+            if (comObj != null && IsComObjectFunc(comObj))
+                Marshal.ReleaseComObject(comObj);
+        }
+
+        #endregion OutlookItemWrapper
+
+        #region IItem Implementation
+
+        #region IItem Properties and Fields Implementation
 
         protected object _item;
         protected Type _itemType;
         protected dynamic _dyn;
-        protected bool _disposed = false;
 
-        private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> PropertyCache = new();
-        private static readonly ConcurrentDictionary<Type, Dictionary<string, MethodInfo>> MethodCache = new();
-
-        private static readonly ImmutableHashSet<string> DefaultSupportedTypes = new HashSet<string>(
+        protected static readonly ImmutableHashSet<string> DefaultSupportedTypes = new HashSet<string>(
         [
             "MailItem", "TaskItem", "AppointmentItem", "ContactItem", "NoteItem",
             "JournalItem", "PostItem", "ReportItem", "DistListItem", "DocumentItem",
             "RemoteItem", "SharingItem", "StorageItem",
             "TaskRequestItem", "TaskRequestAcceptItem", "TaskRequestDeclineItem", "TaskRequestUpdateItem"
         ]).ToImmutableHashSet();
-
         internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();
-
-        #endregion Private Fields and Properties
-
-        #region Properties
-
+        
         public Application Application => _dyn.Application;
         public Attachments Attachments => _dyn.Attachments;
         public string BillingInformation
@@ -154,9 +162,10 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.UnRead;
             set => _dyn.UnRead = value;
         }
-        #endregion Properties
 
-        #region Public Methods
+        #endregion IItem IItem Properties and Fields Implementation
+
+        #region IItem Method Implementation
 
         public void Close(OlInspectorClose SaveMode)
         {
@@ -200,21 +209,11 @@ namespace Gsync.OutlookInterop.Item
             _dyn.ShowCategoriesDialog();
         }
 
-        public virtual void Dispose()
-        {
-            if (_disposed) return;
-            DetachComEvents();
-            ReleaseComObject(_dyn);
-            ReleaseComObject(_item);
-            ReleaseComObject(_comEvents);
+        #endregion IItem Method Implementation
 
-            _disposed = true;
-            GC.SuppressFinalize(this);
-        }
+        #region IItem Event Implementation
 
-        #endregion Public Methods
-
-        #region Event Bridging
+        #region C# Events
 
         public event IItem.AttachmentAddEventHandler AttachmentAdd;
         public event IItem.AttachmentReadEventHandler AttachmentRead;
@@ -225,6 +224,10 @@ namespace Gsync.OutlookInterop.Item
         public event IItem.PropertyChangeEventHandler PropertyChange;
         public event IItem.ReadEventHandler Read;
         public event IItem.WriteEventHandler Write;
+
+        #endregion C# Events
+
+        #region COM Event Handlers => Invoke C# Events
 
         private readonly List<Delegate> _eventHandlers = new();
 
@@ -237,6 +240,10 @@ namespace Gsync.OutlookInterop.Item
         private void OnPropertyChange(string name) => PropertyChange?.Invoke(name);
         private void OnRead() => Read?.Invoke();
         private void OnWrite(ref bool cancel) => Write?.Invoke(ref cancel);
+
+        #endregion COM Event Handlers => Invoke C# Events
+
+        #region Wire and Unwire Bridge COM Event Handlers
 
         protected ItemEvents_10_Event _comEvents;
 
@@ -270,22 +277,67 @@ namespace Gsync.OutlookInterop.Item
             _comEvents.Write -= OnWrite;
         }
 
-        #endregion Event Bridging
+        #endregion Wire and Unwire Bridge COM Event Handlers
 
-        #region Private Helper Methods
+        #endregion IItem Event Implementation
 
-        protected virtual bool IsComObjectFunc(object obj)
+        #region IEquatable<IItem> Implementation
+
+        private IEqualityComparer<IItem> _equalityComparer = new IItemEqualityComparer();
+        /// <summary>
+        /// Gets or sets the equality comparer used for IEquatable<IItem> implementation.
+        /// </summary>
+        public IEqualityComparer<IItem> EqualityComparer
         {
-            if (obj is null) { return false; }
-            else { return Marshal.IsComObject(obj); }
+            get => _equalityComparer;
+            set => _equalityComparer = value ?? new IItemEqualityComparer();
         }
-        protected virtual void ReleaseComObject(object comObj)
+
+#nullable enable
+
+        /// <summary>
+        /// Implements IEquatable<IItem> using the injected or default IEqualityComparer<IItem>.
+        /// </summary>
+        public bool Equals(IItem? other)
         {
-            if (comObj != null && IsComObjectFunc(comObj))
-                Marshal.ReleaseComObject(comObj);
+            return EqualityComparer.Equals(this, other);
         }
 
-        #endregion Private Helper Methods
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is IItem item)
+                return Equals(item);
+            return false;
+        }
 
+        public override int GetHashCode()
+        {
+            return EqualityComparer.GetHashCode(this);
+        }
+
+#nullable disable
+
+        #endregion IEquatable<IItem> Implementation
+
+        #region IDisposable Implementation
+
+        protected bool _disposed = false;
+
+        public virtual void Dispose()
+        {
+            if (_disposed) return;
+            DetachComEvents();
+            ReleaseComObject(_dyn);
+            ReleaseComObject(_item);
+            ReleaseComObject(_comEvents);
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+                
+        #endregion IDisposable Implementation
+
+        #endregion IItem Implementation
     }
 }
