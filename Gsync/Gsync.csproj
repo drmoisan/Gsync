@@ -187,7 +187,7 @@
     <Compile Include="OutlookInterop\Item\_OutlookItem\DetachedOutlookItem.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\IItemSimilarityComparer.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\IItemEqualityComparer.cs" />
-    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperLoose.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapper.cs" />
     <Compile Include="Utilities\HelperClasses\DefaultDirectory.cs" />

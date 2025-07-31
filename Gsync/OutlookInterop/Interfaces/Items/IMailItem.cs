@@ -33,6 +33,13 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         string VotingOptions { get; set; }
         string VotingResponse { get; set; }
 
+        // --- Added properties ---
+        string ConversationID { get; }
+        string HTMLBody { get; set; }        
+        ItemProperties ItemProperties { get; }
+        string SenderEmailAddress { get; }
+        string SenderName { get; }
+
         // --- Additional _MailItem methods ---
         void ClearConversationIndex();
         MailItem Forward();

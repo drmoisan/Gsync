@@ -394,11 +394,11 @@ namespace Gsync.Test.OutlookInterop.Item
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
 
-            var wrapper = new OutlookItemWrapper(mock.Object)
+            var wrapper = new MailItemWrapper(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
-            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
+            var otherWrapper = new MailItemWrapper(otherMock.Object);
 
             Assert.IsTrue(wrapper.Equals((object)otherWrapper));
             customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
@@ -419,5 +419,41 @@ namespace Gsync.Test.OutlookInterop.Item
             Assert.AreEqual(42, wrapper.GetHashCode());
             customComparer.Verify(c => c.GetHashCode(wrapper), Times.Once);
         }
+
+        [TestMethod]
+        public void ConversationID_Property_ReturnsValue()
+        {
+            var mock = CreateMailItemMock();
+            mock.Setup(m => m.ConversationID).Returns("ConvId");
+            var wrapper = new MailItemWrapper(mock.Object);
+            Assert.AreEqual("ConvId", wrapper.ConversationID);
+        }
+
+        [TestMethod]
+        public void HTMLBody_Property_GetSet()
+        {
+            var mock = CreateMailItemMock();
+            mock.SetupProperty(m => m.HTMLBody, "TestHtml");
+            var wrapper = new MailItemWrapper(mock.Object);
+            wrapper.HTMLBody = "NewHtml";
+            Assert.AreEqual("NewHtml", wrapper.HTMLBody);
+        }
+        [TestMethod]
+        public void SenderEmailAddress_Property_ReturnsValue()
+        {
+            var mock = CreateMailItemMock();
+            mock.Setup(m => m.SenderEmailAddress).Returns("test@example.com");
+            var wrapper = new MailItemWrapper(mock.Object);
+            Assert.AreEqual("test@example.com", wrapper.SenderEmailAddress);
+        }
+        [TestMethod]
+        public void SenderName_Property_ReturnsValue()
+        {
+            var mock = CreateMailItemMock();
+            mock.Setup(m => m.SenderName).Returns("Sender");
+            var wrapper = new MailItemWrapper(mock.Object);
+            Assert.AreEqual("Sender", wrapper.SenderName);
+        }
+        // TODO: Ensure that none of the tests are using OutlookItemWrapper instead of MailItemWrapper
     }
 }

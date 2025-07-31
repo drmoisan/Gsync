@@ -29,9 +29,9 @@ namespace Gsync.Test.OutlookInterop.Item
             return mock;
         }
 
-        private OutlookItemLooseWrapper CreateWrapper(Mock<MailItem> mock)
+        private OutlookItemWrapperLoose CreateWrapper(Mock<MailItem> mock)
         {
-            return new OutlookItemLooseWrapper(mock.Object);
+            return new OutlookItemWrapperLoose(mock.Object);
         }
 
         [TestMethod]
@@ -39,7 +39,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void _OutlookItemWrapper_ExceptionIfNullObject()
         {
             Console.WriteLine("Testing OutlookItemWrapper with null object");
-            var wrapper = new OutlookItemLooseWrapper(null);
+            var wrapper = new OutlookItemWrapperLoose(null);
         }
 
         [TestMethod]
@@ -47,7 +47,7 @@ namespace Gsync.Test.OutlookInterop.Item
         public void _OutlookItemWrapper_ExceptionIfUnsupportedType()
         {
             Console.WriteLine("Testing OutlookItemWrapper with unsupported type");
-            var wrapper = new OutlookItemLooseWrapper(new object());
+            var wrapper = new OutlookItemWrapperLoose(new object());
         }
 
         [TestMethod]
@@ -569,9 +569,9 @@ namespace Gsync.Test.OutlookInterop.Item
         }
 
         // Helper to access protected method
-        private bool wrapperProtectedIsComObjectFunc(OutlookItemLooseWrapper wrapper, object obj)
+        private bool wrapperProtectedIsComObjectFunc(OutlookItemWrapperLoose wrapper, object obj)
         {
-            var method = typeof(OutlookItemLooseWrapper).GetMethod("IsComObjectFunc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var method = typeof(OutlookItemWrapperLoose).GetMethod("IsComObjectFunc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             return (bool)method.Invoke(wrapper, new[] { obj });
         }
 
@@ -745,7 +745,7 @@ namespace Gsync.Test.OutlookInterop.Item
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
             customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(123);
 
-            var wrapper = new OutlookItemLooseWrapper(mock.Object)
+            var wrapper = new OutlookItemWrapperLoose(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
@@ -765,11 +765,11 @@ namespace Gsync.Test.OutlookInterop.Item
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
 
-            var wrapper = new OutlookItemLooseWrapper(mock.Object)
+            var wrapper = new OutlookItemWrapperLoose(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
-            var otherWrapper = new OutlookItemLooseWrapper(otherMock.Object);
+            var otherWrapper = new OutlookItemWrapperLoose(otherMock.Object);
 
             Assert.IsFalse(wrapper.Equals(otherWrapper));
             customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
@@ -783,11 +783,11 @@ namespace Gsync.Test.OutlookInterop.Item
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
 
-            var wrapper = new OutlookItemLooseWrapper(mock.Object)
+            var wrapper = new OutlookItemWrapperLoose(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
-            var otherWrapper = new OutlookItemLooseWrapper(otherMock.Object);
+            var otherWrapper = new OutlookItemWrapperLoose(otherMock.Object);
 
             Assert.IsTrue(wrapper.Equals((object)otherWrapper));
             customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
@@ -800,7 +800,7 @@ namespace Gsync.Test.OutlookInterop.Item
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
 
-            var wrapper = new OutlookItemLooseWrapper(mock.Object)
+            var wrapper = new OutlookItemWrapperLoose(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };

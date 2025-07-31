@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Gsync.Test.OutlookInterop.Item
 {
-    public class TestableOutlookItemLooseWrapper : OutlookItemLooseWrapper
+    public class TestableOutlookItemLooseWrapper : OutlookItemWrapperLoose
     {
         public List<object> ReleasedObjects = new List<object>();
         public bool ThrowOnRelease = false;

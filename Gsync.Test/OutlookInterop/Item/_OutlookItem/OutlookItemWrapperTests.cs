@@ -122,16 +122,7 @@ namespace Gsync.Test.OutlookInterop.Item
             wrapper.Companies = "NewCo";
             Assert.AreEqual("NewCo", wrapper.Companies);
         }
-
-        [TestMethod]
-        public void ConversationID_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.ConversationID).Returns("ConvId");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("ConvId", wrapper.ConversationID);
-        }
-
+                
         [TestMethod]
         public void CreationTime_Property_ReturnsValue()
         {
@@ -192,17 +183,7 @@ namespace Gsync.Test.OutlookInterop.Item
             var wrapper = CreateWrapper(mock);
             Assert.AreEqual("EntryId", wrapper.EntryID);
         }
-                
-        [TestMethod]
-        public void HTMLBody_Property_GetSet()
-        {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.HTMLBody, "TestHtml");
-            var wrapper = CreateWrapper(mock);
-            wrapper.HTMLBody = "NewHtml";
-            Assert.AreEqual("NewHtml", wrapper.HTMLBody);
-        }
-
+        
         [TestMethod]
         public void Importance_Property_GetSet()
         {
@@ -297,24 +278,6 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.Setup(m => m.Saved).Returns(true);
             var wrapper = CreateWrapper(mock);
             Assert.IsTrue(wrapper.Saved);
-        }
-
-        [TestMethod]
-        public void SenderEmailAddress_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.SenderEmailAddress).Returns("test@example.com");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("test@example.com", wrapper.SenderEmailAddress);
-        }
-
-        [TestMethod]
-        public void SenderName_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.SenderName).Returns("Sender");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("Sender", wrapper.SenderName);
         }
 
         [TestMethod]

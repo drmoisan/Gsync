@@ -21,11 +21,9 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.SetupGet(m => m.Categories).Returns("Cats");
             mock.SetupGet(m => m.Class).Returns(OlObjectClass.olMail);
             mock.SetupGet(m => m.Companies).Returns("MyCo");
-            mock.SetupGet(m => m.ConversationID).Returns("ConvId");
             var now = DateTime.Now;
             mock.SetupGet(m => m.CreationTime).Returns(now);
             mock.SetupGet(m => m.EntryID).Returns("itemEntryId");
-            mock.SetupGet(m => m.HTMLBody).Returns("HtmlBody");
             mock.SetupGet(m => m.Importance).Returns(OlImportance.olImportanceHigh);
             mock.SetupGet(m => m.LastModificationTime).Returns(now);
             mock.SetupGet(m => m.MessageClass).Returns("IPM.Note");
@@ -34,12 +32,15 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.SetupGet(m => m.OutlookInternalVersion).Returns(42);
             mock.SetupGet(m => m.OutlookVersion).Returns("16.0");
             mock.SetupGet(m => m.Saved).Returns(true);
-            mock.SetupGet(m => m.SenderEmailAddress).Returns("foo@bar.com");
-            mock.SetupGet(m => m.SenderName).Returns("FooBar");
             mock.SetupGet(m => m.Sensitivity).Returns(OlSensitivity.olPrivate);
             mock.SetupGet(m => m.Size).Returns(1234);
             mock.SetupGet(m => m.Subject).Returns("Test Subject");
             mock.SetupGet(m => m.UnRead).Returns(true);
+            //TODO: Move to MailItem
+            //mock.SetupGet(m => m.ConversationID).Returns("ConvId");
+            //mock.SetupGet(m => m.HTMLBody).Returns("HtmlBody");
+            //mock.SetupGet(m => m.SenderEmailAddress).Returns("foo@bar.com");
+            //mock.SetupGet(m => m.SenderName).Returns("FooBar");
             // Parent as MAPIFolder
             var folderMock = new Mock<MAPIFolder>();
             folderMock.SetupGet(f => f.StoreID).Returns("storeId123");

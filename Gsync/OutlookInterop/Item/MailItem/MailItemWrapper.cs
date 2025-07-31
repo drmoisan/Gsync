@@ -64,6 +64,7 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.CC;
             set => _dyn.CC = value;
         }
+        public string ConversationID => _dyn.ConversationID;
         public string DeferredDeliveryTime
         {
             get => _dyn.DeferredDeliveryTime;
@@ -78,6 +79,11 @@ namespace Gsync.OutlookInterop.Item
         {
             get => _dyn.FlagRequest;
             set => _dyn.FlagRequest = value;
+        }
+        public string HTMLBody
+        {
+            get => _dyn.HTMLBody;
+            set => _dyn.HTMLBody = value;
         }
         public string ReceivedByName => _dyn.ReceivedByName;
         public string ReceivedOnBehalfOfName => _dyn.ReceivedOnBehalfOfName;
@@ -120,7 +126,9 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.SaveSentMessageFolder;
             set => _dyn.SaveSentMessageFolder = value;
         }
+        public string SenderEmailAddress => _dyn.SenderEmailAddress;
         public string SenderEmailType => _dyn.SenderEmailType;
+        public string SenderName => _dyn.SenderName;
         public string SentOnBehalfOfName
         {
             get => _dyn.SentOnBehalfOfName;

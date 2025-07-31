@@ -11,26 +11,26 @@ using System.Runtime.InteropServices;
 
 namespace Gsync.OutlookInterop.Item
 {
-    public class OutlookItemLooseWrapper : IItem, IDisposable, IEquatable<IItem>
+    public class OutlookItemWrapperLoose : IItem, IDisposable, IEquatable<IItem>
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(
             System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         #region ctor
 
-        public OutlookItemLooseWrapper(object item)
+        public OutlookItemWrapperLoose(object item)
             : this(item, item as ItemEvents_10_Event)
         {
             Init();
         }
 
-        protected OutlookItemLooseWrapper(object item, ItemEvents_10_Event comEvents)
+        protected OutlookItemWrapperLoose(object item, ItemEvents_10_Event comEvents)
         {
             _item = item;
             _comEvents = comEvents;
         }
 
-        protected OutlookItemLooseWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
+        protected OutlookItemWrapperLoose(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
 
         {
             _item = item;
@@ -38,7 +38,7 @@ namespace Gsync.OutlookInterop.Item
             SupportedTypes = supportedTypes;
         }
 
-        protected OutlookItemLooseWrapper Init()
+        protected OutlookItemWrapperLoose Init()
         {
             // Initialize any additional properties or state here if needed
             _item.ThrowIfNull();
@@ -200,7 +200,22 @@ namespace Gsync.OutlookInterop.Item
             get => TryGet(() => (bool)_dyn.UnRead);
             set => TrySet(() => _dyn.UnRead = value);
         }
-        
+
+        // Add these property implementations to the OutlookItemWrapper class
+        public Actions Actions => _dyn.Actions;
+
+        public string ConversationIndex => _dyn.ConversationIndex;
+
+        public string ConversationTopic => _dyn.ConversationTopic;
+
+        public string FormDescription => _dyn.FormDescription;
+
+        public object GetInspector => _dyn.GetInspector;
+
+        public object MAPIOBJECT => _dyn.MAPIOBJECT;
+
+        public object UserProperties => _dyn.UserProperties;
+
         #endregion IItem Properties Implementation
 
         #region IItem Method Implementation

@@ -60,7 +60,10 @@ namespace Gsync.OutlookInterop.Item
             if (!StringEquals(x.To, y.To)) return false;
             if (!StringEquals(x.VotingOptions, y.VotingOptions)) return false;
             if (!StringEquals(x.VotingResponse, y.VotingResponse)) return false;
-
+            if (!StringEquals(x.ConversationID, y.ConversationID)) return false;
+            if (!StringEquals(x.HTMLBody, y.HTMLBody)) return false;
+            if (!StringEquals(x.SenderEmailAddress, y.SenderEmailAddress)) return false;
+            if (!StringEquals(x.SenderName, y.SenderName)) return false;
             // Note: Recipients/ReplyRecipients, Attachments, etc. are intentionally omitted
 
             return true;
@@ -121,6 +124,10 @@ namespace Gsync.OutlookInterop.Item
                 hash = hash * 23 + StringHash(obj.To);
                 hash = hash * 23 + StringHash(obj.VotingOptions);
                 hash = hash * 23 + StringHash(obj.VotingResponse);
+                hash = hash * 23 + StringHash(obj.ConversationID);
+                hash = hash * 23 + StringHash(obj.HTMLBody);
+                hash = hash * 23 + StringHash(obj.SenderEmailAddress);
+                hash = hash * 23 + StringHash(obj.SenderName);
             }
             return hash;
         }

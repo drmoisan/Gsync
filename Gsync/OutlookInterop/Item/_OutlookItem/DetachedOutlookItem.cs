@@ -3,6 +3,7 @@ using System;
 using Gsync.OutlookInterop.Interfaces.Items;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+//using System.Windows.Forms;
 
 namespace Gsync.OutlookInterop.Item
 {
@@ -28,10 +29,8 @@ namespace Gsync.OutlookInterop.Item
             Categories = item.Categories;
             Class = item.Class;
             Companies = item.Companies;
-            ConversationID = item.ConversationID;
             CreationTime = item.CreationTime;
             EntryID = item.EntryID;
-            HTMLBody = item.HTMLBody;
             Importance = item.Importance;
             LastModificationTime = item.LastModificationTime;
             MessageClass = item.MessageClass;
@@ -40,16 +39,24 @@ namespace Gsync.OutlookInterop.Item
             OutlookInternalVersion = item.OutlookInternalVersion;
             OutlookVersion = item.OutlookVersion;
             Saved = item.Saved;
-            SenderEmailAddress = item.SenderEmailAddress;
-            SenderName = item.SenderName;
             Sensitivity = item.Sensitivity;
             Size = item.Size;
             Subject = item.Subject;
             UnRead = item.UnRead;
+            
+            ConversationIndex = item.ConversationIndex;
+            ConversationTopic = item.ConversationTopic;
+            FormDescription = item.FormDescription;
 
             var folder = item.Parent as MAPIFolder;
             StoreID = folder?.StoreID;
             ParentFolderEntryID = folder?.EntryID;
+
+            //TODO: Move to DetachedMailItem
+            //ConversationID = item.ConversationID;
+            //HTMLBody = item.HTMLBody;
+            //SenderEmailAddress = item.SenderEmailAddress;
+            //SenderName = item.SenderName;
         }
 
         #endregion ctor
@@ -96,12 +103,16 @@ namespace Gsync.OutlookInterop.Item
         #region IItem Properties Implementation
 
         // --- COM reference properties: always null in detached object ---
+        [JsonIgnore] public Actions Actions => null;
         [JsonIgnore] public Application Application => null;
         [JsonIgnore] public Attachments Attachments => null;
+        [JsonIgnore] public object GetInspector => null;
         [JsonIgnore] public ItemProperties ItemProperties => null;
         [JsonIgnore] public NameSpace Session => null;
         [JsonIgnore] public object InnerObject => null;
+        [JsonIgnore] public object MAPIOBJECT => null;
         [JsonIgnore] public object Parent => null;
+        [JsonIgnore] public object UserProperties => null;
 
         // --- Value & string properties ---
         public string BillingInformation { get; set; }
@@ -110,8 +121,11 @@ namespace Gsync.OutlookInterop.Item
         public OlObjectClass Class { get; set; }
         public string Companies { get; set; }
         public string ConversationID { get; set; }
+        public string ConversationIndex { get; set; }
+        public string ConversationTopic { get; set; }
         public DateTime CreationTime { get; set; }
         public string EntryID { get; set; }
+        public string FormDescription { get; set; }
         public string HTMLBody { get; set; }
         public OlImportance Importance { get; set; }
         public DateTime LastModificationTime { get; set; }

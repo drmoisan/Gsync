@@ -43,7 +43,7 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.SetupProperty(x => x.SentOnBehalfOfName, "SenderB");
             mock.SetupProperty(x => x.To, "to@example.com");
             mock.SetupProperty(x => x.VotingOptions, "Yes;No");
-            mock.SetupProperty(x => x.VotingResponse, "Yes");
+            mock.SetupProperty(x => x.VotingResponse, "Yes");            
 
             // Read-only, set up via Setup (not SetupProperty)
             mock.Setup(x => x.Class).Returns(OlObjectClass.olMail);
@@ -65,7 +65,7 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.Setup(x => x.ReplyRecipientNames).Returns("Rep1;Rep2");
             mock.Setup(x => x.SenderEmailType).Returns("SMTP");
             mock.Setup(x => x.SentOn).Returns(DateTime.Today.AddHours(8));
-            mock.Setup(x => x.Submitted).Returns(true);
+            mock.Setup(x => x.Submitted).Returns(true);            
 
             return mock;
         }
@@ -603,7 +603,6 @@ namespace Gsync.Test.OutlookInterop.Item
             var comparer = new MailItemEqualityComparer();
             Assert.IsFalse(comparer.Equals(mock1.Object, mock2.Object));
         }
-
-
+        
     }
 }

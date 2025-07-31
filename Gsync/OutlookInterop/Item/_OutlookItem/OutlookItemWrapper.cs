@@ -111,15 +111,9 @@ namespace Gsync.OutlookInterop.Item
         {
             get => _dyn.Companies;
             set => _dyn.Companies = value;
-        }
-        public string ConversationID => _dyn.ConversationID;
+        }        
         public DateTime CreationTime => _dyn.CreationTime;
-        public string EntryID => _dyn.EntryID;
-        public string HTMLBody
-        {
-            get => _dyn.HTMLBody;
-            set => _dyn.HTMLBody = value;
-        }
+        public string EntryID => _dyn.EntryID;        
         public OlImportance Importance
         {
             get => _dyn.Importance;
@@ -142,9 +136,7 @@ namespace Gsync.OutlookInterop.Item
         public int OutlookInternalVersion => _dyn.OutlookInternalVersion;
         public string OutlookVersion => _dyn.OutlookVersion;
         public object Parent => _dyn.Parent;
-        public bool Saved => _dyn.Saved;
-        public string SenderEmailAddress => _dyn.SenderEmailAddress;
-        public string SenderName => _dyn.SenderName;
+        public bool Saved => _dyn.Saved;        
         public OlSensitivity Sensitivity
         {
             get => _dyn.Sensitivity;
@@ -162,6 +154,21 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.UnRead;
             set => _dyn.UnRead = value;
         }
+
+        // Add these property implementations to the OutlookItemWrapper class
+        public Actions Actions => _dyn.Actions;
+
+        public string ConversationIndex => _dyn.ConversationIndex;
+
+        public string ConversationTopic => _dyn.ConversationTopic;
+
+        public string FormDescription => _dyn.FormDescription;
+
+        public object GetInspector => _dyn.GetInspector;
+
+        public object MAPIOBJECT => _dyn.MAPIOBJECT;
+
+        public object UserProperties => _dyn.UserProperties;
 
         #endregion IItem IItem Properties and Fields Implementation
 
