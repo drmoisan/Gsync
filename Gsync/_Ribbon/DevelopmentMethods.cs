@@ -77,6 +77,7 @@ namespace Gsync.Ribbon
 
         public void TraverseInbox<T> (System.Action<T> action) where T : class
         {
+            var stores = Globals.StoresWrapper.Stores;
             var accountInboxes = Globals.StoresWrapper.Stores.Select(x => (x.Account, x.Inbox)).ToArray();
             foreach (var accountInbox in accountInboxes)
             {

@@ -30,11 +30,31 @@ namespace Gsync.OutlookInterop
         {
             var olApp = Globals.OutlookApplication;
 
-            Stores = olApp.Session.Accounts
-                .Cast<Outlook.Account>()
-                .Where(account => account.AccountType == OlAccountType.olImap)
-                .Select(account => new StoreWrapper(account.DeliveryStore, account).Init())
-                .ToList();
+            Stores = olApp.Session.Stores
+                .Cast<Outlook.Store>()
+                .Select(store => new StoreWrapper(store)).ToList();
+
+            Stores.ForEach(store => logger.Debug($"Store found: {store.DisplayName}, {store.InnerStore.StoreID}"));
+
+            foreach (Outlook.Account account in olApp.Session.Accounts)
+            {
+                logger.Debug($"Processing account {account.DisplayName} with delivery store ID: {account.DeliveryStore.StoreID}");
+                var match = Stores.Find(store => store.InnerStore.StoreID == account.DeliveryStore.StoreID);
+                if (match is not null)
+                {
+                    logger.Debug($"Matched store {match.DisplayName} to account {account.DisplayName}");
+                    match.Account = account;
+                }
+                else { logger.Debug($"No match found for account {account.DisplayName}"); }
+            }
+
+            Stores.ForEach(store => store.Init());
+            
+            //var deliveryStores = olApp.Session.Accounts
+            //    .Cast<Outlook.Account>()
+            //    .Where(account => account.AccountType == OlAccountType.olImap)
+            //    .Select(account => new StoreWrapper(account.DeliveryStore, account).Init())
+            //    .ToList();
 
             return this;
         }
