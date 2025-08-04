@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace Gsync.OutlookInterop.Item
 {
@@ -52,13 +53,93 @@ namespace Gsync.OutlookInterop.Item
             _itemType = type;
 
             AttachComEvents();
+            ResetLazy();
             return this;
         }
 
         #endregion ctor
 
         #region OutlookItemWrapper
+                
+        protected virtual string GetRawHeaders()
+        {
+            try
+            {
+                string headers = PropertyAccessor?.GetProperty(
+                    "http://schemas.microsoft.com/mapi/proptag/0x007D001E") as string;
 
+                if (string.IsNullOrWhiteSpace(headers)) return null;
+
+                return headers;
+            }
+            catch
+            {
+                return null;
+            }            
+        }
+        protected virtual string NormalizeRawHeaders()
+        {
+            try
+            {
+                string headers = RawHeaders;
+                if (string.IsNullOrWhiteSpace(headers)) return null;
+                // Step 1: Sanitize — remove all control characters except CR, LF, and TAB
+                headers = Regex.Replace(headers, @"[^\x20-\x7E\r\n\t]", string.Empty);
+
+                // Step 2: Normalize line endings to \n for processing
+                headers = headers.Replace("\r\n", "\n").Replace("\r", "\n");
+
+                // Step 3: Unfold lines — replace newline + leading whitespace with a space
+                headers = Regex.Replace(headers, @"\n[ \t]+", " ");
+
+                // Step 4: Re-normalize to Outlook's preferred \r\n
+                headers = headers.Replace("\n", "\r\n");
+                return headers;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        protected virtual string GetMessageId()
+        {
+            try
+            {
+                if (RawHeadersNormalized == null)
+                    return null;
+
+                // Match bracketed Message-ID
+                var bracketed = Regex.Match(
+                    RawHeadersNormalized,
+                    @"^Message-ID:\s*<([^<>\r\n]+)>\s*$",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                if (bracketed.Success)
+                    return bracketed.Groups[1].Value;
+
+                // Match unbracketed Message-ID
+                var unbracketed = Regex.Match(
+                    RawHeadersNormalized,
+                    @"^Message-ID:\s*([^<>\r\n]+)\s*$",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                if (unbracketed.Success)
+                    return unbracketed.Groups[1].Value;
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        protected virtual void ResetLazy()
+        {
+            _rawHeaders = new Lazy<string>(GetRawHeaders);
+            _rawHeadersNormalized = new Lazy<string>(NormalizeRawHeaders);
+            _messageId = new Lazy<string>(GetMessageId);
+        }
         protected virtual bool IsComObjectFunc(object obj)
         {
             if (obj is null) { return false; }
@@ -80,15 +161,36 @@ namespace Gsync.OutlookInterop.Item
         protected Type _itemType;
         protected dynamic _dyn;
 
+
+        protected Lazy<string> _messageId;
+        public string MessageId
+        {
+            get => _messageId.Value;
+            protected set => _messageId = value.ToLazy();
+        }
+
+        protected Lazy<string> _rawHeaders;
+        public string RawHeaders
+        {
+            get => _rawHeaders.Value;
+            protected set => _rawHeaders = value.ToLazy();
+        }
+
+        protected Lazy<string> _rawHeadersNormalized;
+        public string RawHeadersNormalized
+        {
+            get => _rawHeadersNormalized.Value;
+            protected set => _rawHeadersNormalized = value.ToLazy();
+        }
+
         protected static readonly ImmutableHashSet<string> DefaultSupportedTypes = new HashSet<string>(
         [
-            "MailItem", "TaskItem", "AppointmentItem", "ContactItem", "NoteItem",
+            "MailItem", "TaskItem", "AppointmentItem", "ContactItem", "MeetingItem", "NoteItem",
             "JournalItem", "PostItem", "ReportItem", "DistListItem", "DocumentItem",
             "RemoteItem", "SharingItem", "StorageItem",
             "TaskRequestItem", "TaskRequestAcceptItem", "TaskRequestDeclineItem", "TaskRequestUpdateItem"
         ]).ToImmutableHashSet();
-        internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();
-        
+        internal virtual ImmutableHashSet<string> SupportedTypes { get; } = DefaultSupportedTypes.ToImmutableHashSet();        
         public Application Application => _dyn.Application;
         public Attachments Attachments => _dyn.Attachments;
         public string BillingInformation
@@ -111,7 +213,8 @@ namespace Gsync.OutlookInterop.Item
         {
             get => _dyn.Companies;
             set => _dyn.Companies = value;
-        }        
+        }
+        public string ConversationID => _dyn.ConversationID;
         public DateTime CreationTime => _dyn.CreationTime;
         public string EntryID => _dyn.EntryID;        
         public OlImportance Importance
@@ -119,8 +222,7 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.Importance;
             set => _dyn.Importance = value;
         }
-        public object InnerObject => _item;
-        public ItemProperties ItemProperties => _dyn.ItemProperties;
+        public object InnerObject => _item;        
         public DateTime LastModificationTime => _dyn.LastModificationTime;
         public string MessageClass => _dyn.MessageClass;
         public string Mileage
@@ -157,18 +259,19 @@ namespace Gsync.OutlookInterop.Item
 
         // Add these property implementations to the OutlookItemWrapper class
         public Actions Actions => _dyn.Actions;
-
         public string ConversationIndex => _dyn.ConversationIndex;
-
         public string ConversationTopic => _dyn.ConversationTopic;
-
         public string FormDescription => _dyn.FormDescription;
-
         public object GetInspector => _dyn.GetInspector;
-
         public object MAPIOBJECT => _dyn.MAPIOBJECT;
-
         public object UserProperties => _dyn.UserProperties;
+        // TODO: Write Unit tests for these properties
+        public bool AutoResolvedWinner => _dyn.AutoResolvedWinner;
+        public Conflicts Conflicts => _dyn.Conflicts;
+        public OlDownloadState DownloadState => _dyn.DownloadState;
+        public bool IsConflict => _dyn.IsConflict;
+        public Links Links => _dyn.Links;
+        public PropertyAccessor PropertyAccessor => _dyn.PropertyAccessor;
 
         #endregion IItem IItem Properties and Fields Implementation
 
@@ -210,11 +313,7 @@ namespace Gsync.OutlookInterop.Item
         {
             if (Type != null) _dyn.SaveAs(Path, Type);
             else _dyn.SaveAs(Path);
-        }
-        public void ShowCategoriesDialog()
-        {
-            _dyn.ShowCategoriesDialog();
-        }
+        }        
 
         #endregion IItem Method Implementation
 
@@ -312,8 +411,9 @@ namespace Gsync.OutlookInterop.Item
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj is IItem item)
+            if (ReferenceEquals(this, obj)) 
+            { return true; }
+            else if (obj is IItem item)
                 return Equals(item);
             return false;
         }

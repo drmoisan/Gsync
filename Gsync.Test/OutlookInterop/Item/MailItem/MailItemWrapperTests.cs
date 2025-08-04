@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Gsync.OutlookInterop.Interfaces.Items;
 using Gsync.OutlookInterop.Item;
+using Gsync.Utilities.HelperClasses;
 using Microsoft.Office.Interop.Outlook;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -22,6 +23,7 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestInitialize]
         public void Setup()
         {
+            Console.SetOut(new DebugTextWriter());
             _mailItemMock = new Mock<MailItem>();
             _eventsMock = new Mock<ItemEvents_10_Event>();
             _wrapper = (MailItemWrapper)Activator.CreateInstance(
@@ -34,7 +36,7 @@ namespace Gsync.Test.OutlookInterop.Item
             _dynMailItem = new DynamicMailItem();
 
             // Inject _dynMailItem into private _dyn field
-            var dynField = typeof(OutlookItemWrapper).GetField("_dyn", BindingFlags.NonPublic | BindingFlags.Instance);
+            var dynField = typeof(MailItemWrapper).GetField("_dyn", BindingFlags.NonPublic | BindingFlags.Instance);
             dynField.SetValue(_wrapper, _dynMailItem);
         }
 
@@ -290,7 +292,7 @@ namespace Gsync.Test.OutlookInterop.Item
             var mailItemMock = new Mock<MailItem>().Object;
             var eventsMock = new Mock<ItemEvents_10_Event>().Object;
             var supportedTypes = ImmutableHashSet.Create("MailItem");            
-            var baseWrapper = new StubOutlookItemWrapper(mailItemMock, eventsMock, supportedTypes);
+            var baseWrapper = new StubMailItemWrapper(mailItemMock, eventsMock, supportedTypes);
 
             var wrapper = new TestableMailItemWrapper(baseWrapper);
             Console.WriteLine(string.Join(",", baseWrapper.SupportedTypes)); // Debug
@@ -302,17 +304,23 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void MailItemWrapper_BaseWrapperCtor_ShouldThrowIfNotMailItem()
         {
-            var notMailItem = new object();
-            var eventsMock = new Mock<ItemEvents_10_Event>().Object;
-            var supportedTypes = ImmutableHashSet.Create(notMailItem.GetType().Name);
+            //var notMailItem = new object();
+            var notMailItem = new Mock<MeetingItem>().Object; // MeetingItem is not a MailItem
+            //var eventsMock = new Mock<ItemEvents_10_Event>().Object;
+            //var supportedTypes = ImmutableHashSet.Create(notMailItem.GetType().Name);
 
-            var baseWrapper = new StubOutlookItemWrapper(notMailItem, eventsMock, supportedTypes);
+            //var baseWrapper = new StubOutlookItemWrapper(notMailItem, eventsMock, supportedTypes);
             //var baseWrapper = new Mock<OutlookItemWrapper>(notMailItem, eventsMock, supportedTypes) { CallBase = true }.Object;
+            //var baseWrapper = new Mock<OutlookItemWrapper>(notMailItem) { CallBase = true }.Object;
             //typeof(OutlookItemWrapper).GetField("_item", BindingFlags.NonPublic | BindingFlags.Instance)
             //    .SetValue(baseWrapper, notMailItem);
+            var baseWrapper = new OutlookItemWrapper(notMailItem);
 
-            var act = () => new TestableMailItemWrapper(baseWrapper);
-            act.Should().Throw<ArgumentNullException>();
+            var act = () => new MailItemWrapper(baseWrapper);
+            //var act = () => new TestableMailItemWrapper(baseWrapper);
+            var e = act.Should().Throw<ArgumentNullException>().Which;
+            Console.WriteLine($"The correct {nameof(ArgumentNullException)} was thrown " +
+                $"with the following message: {e.Message}");            
         }
         [TestMethod]
         public void GetCom10Events_ShouldReturnComEventsField()
@@ -321,8 +329,8 @@ namespace Gsync.Test.OutlookInterop.Item
             var eventsMock = new Mock<ItemEvents_10_Event>().Object;
             var supportedTypes = ImmutableHashSet.Create("MailItem");
 
-            var baseWrapper = new Mock<OutlookItemWrapper>(mailItemMock, eventsMock, supportedTypes) { CallBase = true }.Object;
-            typeof(OutlookItemWrapper).GetField("_comEvents", BindingFlags.NonPublic | BindingFlags.Instance)
+            var baseWrapper = new Mock<MailItemWrapper>(mailItemMock, eventsMock, supportedTypes) { CallBase = true }.Object;
+            typeof(MailItemWrapper).GetField("_comEvents", BindingFlags.NonPublic | BindingFlags.Instance)
                 .SetValue(baseWrapper, eventsMock);
 
             var result = TestableMailItemWrapper.GetCom10Events(baseWrapper);
@@ -365,7 +373,7 @@ namespace Gsync.Test.OutlookInterop.Item
             Assert.AreEqual(customComparer.Object, wrapper.EqualityComparer);
 
             // Should use the injected comparer
-            Assert.IsTrue(wrapper.Equals((IItem)null));
+            Assert.IsTrue(wrapper.Equals((IMailItem)null));
             Assert.AreEqual(123, wrapper.GetHashCode());
         }
 
@@ -374,16 +382,16 @@ namespace Gsync.Test.OutlookInterop.Item
         {
             var mock = CreateMailItemMock();
             var otherMock = CreateMailItemMock();
-            var customComparer = new Mock<IEqualityComparer<IItem>>();
-            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
-            var wrapper = new OutlookItemWrapper(mock.Object)
+            var customComparer = new Mock<IEqualityComparer<IMailItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IMailItem>(), It.IsAny<IMailItem>())).Returns(false);
+            var wrapper = new MailItemWrapper(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
-            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
+            var otherWrapper = new MailItemWrapper(otherMock.Object);
 
             Assert.IsFalse(wrapper.Equals(otherWrapper));
-            customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
+            customComparer.Verify(c => c.Equals(It.IsAny<IMailItem>(), It.IsAny<IMailItem>()), Times.Once);
         }
 
         [TestMethod]
@@ -411,7 +419,7 @@ namespace Gsync.Test.OutlookInterop.Item
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
 
-            var wrapper = new OutlookItemWrapper(mock.Object)
+            var wrapper = new MailItemWrapper(mock.Object)
             {
                 EqualityComparer = customComparer.Object
             };
@@ -454,6 +462,165 @@ namespace Gsync.Test.OutlookInterop.Item
             var wrapper = new MailItemWrapper(mock.Object);
             Assert.AreEqual("Sender", wrapper.SenderName);
         }
-        // TODO: Ensure that none of the tests are using OutlookItemWrapper instead of MailItemWrapper
+
+        [TestMethod]
+        public void ShowCategoriesDialog_Method_CallsUnderlying()
+        {
+            var mock = CreateMailItemMock();
+            mock.Setup(m => m.ShowCategoriesDialog()).Verifiable();
+            var wrapper = new MailItemWrapper(mock.Object);
+            wrapper.ShowCategoriesDialog();
+            mock.Verify(m => m.ShowCategoriesDialog(), Times.Once);
+        }
+
+        [TestMethod]
+        public void ItemProperties_Property_ReturnsValue()
+        {
+            // Arrange
+            var itemProperties = new Mock<ItemProperties>().Object;
+            _dynMailItem.Properties["ItemProperties"] = itemProperties;
+
+            // Act & Assert
+            _wrapper.ItemProperties.Should().Be(itemProperties);
+        }
+
+        [TestMethod]
+        public void Recipients_Property_ReturnsValue()
+        {
+            // Arrange
+            var recipients = new Mock<Recipients>().Object;
+            _dynMailItem.Properties["Recipients"] = recipients;
+
+            // Act & Assert
+            _wrapper.Recipients.Should().Be(recipients);
+        }
+
+        [TestMethod]
+        public void ReplyRecipients_Property_ReturnsValue()
+        {
+            // Arrange
+            var replyRecipients = new Mock<Recipients>().Object;
+            _dynMailItem.Properties["ReplyRecipients"] = replyRecipients;
+
+            // Act & Assert
+            _wrapper.ReplyRecipients.Should().Be(replyRecipients);
+        }
+
+        [TestMethod]
+        public void OnCustomPropertyChange_RaisesEvent()
+        {
+            // Arrange
+            bool called = false;
+            string expectedName = "TestProp";
+            _wrapper.CustomPropertyChange += name =>
+            {
+                called = true;
+                name.Should().Be(expectedName);
+            };
+
+            // Act
+            var method = typeof(MailItemWrapper).GetMethod("OnCustomPropertyChange", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(_wrapper, new object[] { expectedName });
+
+            // Assert
+            called.Should().BeTrue();
+        }
+
+        [TestMethod]
+        public void OnForward_RaisesEvent()
+        {
+            // Arrange
+            bool called = false;
+            object forwardObj = new object();
+            bool cancel = false;
+            _wrapper.ForwardEvent += (object obj, ref bool c) =>
+            {
+                called = true;
+                obj.Should().Be(forwardObj);
+                c = true;
+            };
+
+            // Act
+            var method = typeof(MailItemWrapper).GetMethod("OnForward", BindingFlags.NonPublic | BindingFlags.Instance);
+            object[] parameters = new object[] { forwardObj, cancel };
+            method.Invoke(_wrapper, parameters);
+
+            // Assert
+            called.Should().BeTrue();
+        }
+
+        [TestMethod]
+        public void OnReplyAll_RaisesEvent()
+        {
+            // Arrange
+            bool called = false;
+            object responseObj = new object();
+            bool cancel = false;
+            _wrapper.ReplyAllEvent += (object obj, ref bool c) =>
+            {
+                called = true;
+                obj.Should().Be(responseObj);
+                c = true;
+            };
+
+            // Act
+            var method = typeof(MailItemWrapper).GetMethod("OnReplyAll", BindingFlags.NonPublic | BindingFlags.Instance);
+            object[] parameters = new object[] { responseObj, cancel };
+            method.Invoke(_wrapper, parameters);
+
+            // Assert
+            called.Should().BeTrue();
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsTrue_ForIdenticalReference()
+        {            
+            // Act
+            var result = _wrapper.Equals((object)_wrapper);
+
+            // Assert
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsTrue_ForEquivalentObjects()
+        {
+            // Arrange            
+            var otherMock = CreateMailItemMock();
+            var otherTypes = ImmutableHashSet.Create(otherMock.Object.GetType().Name);
+            //var otherWrapper = new TestableMailItemWrapper(otherMock.Object, _eventsMock.Object, otherTypes);
+            var otherWrapper = new MailItemWrapper(otherMock.Object);
+
+            // Use a custom comparer that returns true for equality
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+            _wrapper.EqualityComparer = customComparer.Object;
+
+            // Act
+            var result = _wrapper.Equals((object)otherWrapper);
+
+            // Assert
+            Assert.IsTrue(result);
+            customComparer.Verify(c => c.Equals(_wrapper, otherWrapper), Times.Once);
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsFalse_ForDifferentObjects()
+        {
+            // Arrange            
+            var otherObject = new object(); // Not an IItem
+
+            // Use a custom comparer that returns false for equality
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+            _wrapper.EqualityComparer = customComparer.Object;
+
+            // Act
+            var result = _wrapper.Equals((object)otherObject);
+
+            // Assert
+            Assert.IsFalse(result);
+            customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Never);
+        }
     }
 }

@@ -21,6 +21,7 @@ namespace Gsync.OutlookInterop.Item
             DeferredDeliveryTime = item.DeferredDeliveryTime;
             DeleteAfterSubmit = item.DeleteAfterSubmit;
             FlagRequest = item.FlagRequest;
+            HTMLBody = item.HTMLBody;
             ReceivedByName = item.ReceivedByName;
             ReceivedOnBehalfOfName = item.ReceivedOnBehalfOfName;
             ReceivedTime = item.ReceivedTime;
@@ -32,7 +33,9 @@ namespace Gsync.OutlookInterop.Item
             ReminderTime = item.ReminderTime;
             ReplyRecipientNames = item.ReplyRecipientNames;
             SaveSentMessageFolder = item.SaveSentMessageFolder;
+            SenderEmailAddress = item.SenderEmailAddress;
             SenderEmailType = item.SenderEmailType;
+            SenderName = item.SenderName;
             SentOnBehalfOfName = item.SentOnBehalfOfName;
             SentOn = item.SentOn;
             Submitted = item.Submitted;
@@ -86,6 +89,7 @@ namespace Gsync.OutlookInterop.Item
         public string DeferredDeliveryTime { get; set; }
         public string DeleteAfterSubmit { get; set; }
         public string FlagRequest { get; set; }
+        public string HTMLBody { get; set; }
         public string ReceivedByName { get; set; }
         public string ReceivedOnBehalfOfName { get; set; }
         public DateTime ReceivedTime { get; set; }
@@ -97,7 +101,9 @@ namespace Gsync.OutlookInterop.Item
         public DateTime ReminderTime { get; set; }
         public string ReplyRecipientNames { get; set; }
         public int SaveSentMessageFolder { get; set; }
+        public string SenderEmailAddress { get; set; }
         public string SenderEmailType { get; set; }
+        public string SenderName { get; set; }
         public string SentOnBehalfOfName { get; set; }
         public DateTime SentOn { get; set; }
         public bool Submitted { get; set; }
@@ -125,6 +131,10 @@ namespace Gsync.OutlookInterop.Item
             throw new NotSupportedException("This DetachedMailItem is not connected to Outlook.");
         public void Send() =>
             throw new NotSupportedException("This DetachedMailItem is not connected to Outlook.");
+        public void ShowCategoriesDialog()
+        {
+            throw new NotSupportedException("This DetachedMailItem is not connected to Outlook.");
+        }
         
         #endregion IMailItem Methods
 

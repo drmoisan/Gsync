@@ -6,20 +6,34 @@ namespace Gsync.OutlookInterop.Interfaces.Items
 {
     public interface IItem : IEquatable<IItem>, IDisposable
     {
-        // === Core Properties (common to all oltypes.core) ===
+        #region Custom IItem Properties and Methods
+
+        object InnerObject { get; }
+
+        string RawHeaders { get; }
+
+        string MessageId { get; }
+
+        #endregion Custom IItem Properties and Methods
+
+        #region CORE - Assembly Microsoft.Office.Interop.Outlook, Version=15.0.0.0
+
+        #region Core Properties (common to all oltypes)
+
         Application Application { get; }
         OlObjectClass Class { get; }
         NameSpace Session { get; }
         object Parent { get; }
+        // TODO: Write a wrapper for Outlook.Attachments
         Attachments Attachments { get; }
         string BillingInformation { get; set; }
         string Body { get; set; }
         string Categories { get; set; }
         string Companies { get; set; }
+        string ConversationID { get; }
         DateTime CreationTime { get; }
         string EntryID { get; }
-        OlImportance Importance { get; set; }
-        object InnerObject { get; }
+        OlImportance Importance { get; set; }        
         DateTime LastModificationTime { get; }
         string MessageClass { get; }
         string Mileage { get; set; }
@@ -31,31 +45,41 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         int Size { get; }
         string Subject { get; set; }
         bool UnRead { get; set; }
-
-        // === Added Missing Common Properties (from oltypes.core.properties.common) ===
+        // TODO: Write a wrapper for Outlook.Actions
         Actions Actions { get; }
         string ConversationIndex { get; }
         string ConversationTopic { get; }
         string FormDescription { get; }
         object GetInspector { get; }
+        // TODO: Write a wrapper for MAPIOBJECT
         object MAPIOBJECT { get; }
         object UserProperties { get; }
+        bool AutoResolvedWinner { get; }
+        Conflicts Conflicts { get; }
+        OlDownloadState DownloadState { get; }
+        bool IsConflict { get; }
+        Links Links { get; }
+        PropertyAccessor PropertyAccessor { get; }        
 
-        // === Additional Utility Property ===
-        IEqualityComparer<IItem> EqualityComparer { get; set; }
+        #endregion Core Properties (common to all oltypes)
 
-        // === Methods ===
+        #region Core Methods (common to all oltypes)
+
+        // TODO: Change Close signature to not rely on Outlook constants
         void Close(OlInspectorClose SaveMode);
         object Copy();
         void Delete();
         void Display(object Modal = null);
+        // TODO: Change Move signature to not rely on Outlook constants
         object Move(MAPIFolder DestFldr);
         void PrintOut();
         void Save();
         void SaveAs(string Path, object Type = null);
-        void ShowCategoriesDialog();
+        
+        #endregion Core Methods (common to all oltypes)
 
-        // === Events ===
+        #region Core Events (common to all oltypes)
+        
         event AttachmentAddEventHandler AttachmentAdd;
         event AttachmentReadEventHandler AttachmentRead;
         event AttachmentRemoveEventHandler AttachmentRemove;
@@ -75,16 +99,17 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         delegate void PropertyChangeEventHandler(string name);
         delegate void ReadEventHandler();
         delegate void WriteEventHandler(ref bool cancel);
+        
+        #endregion Core Events (common to all oltypes)
 
-        // ------------------------------------------------------------------------
-        //          PROPERTIES NOT PRESENT IN oltypes.core.properties.common
-        // ------------------------------------------------------------------------
-        /*
-        string ConversationID { get; }
-        string HTMLBody { get; set; }        
-        ItemProperties ItemProperties { get; }
-        string SenderEmailAddress { get; }
-        string SenderName { get; }
-        */
+        #endregion CORE - Assembly Microsoft.Office.Interop.Outlook, Version=15.0.0.0
+
+        #region IEquatable<IItem> Implementation
+
+        // === Additional Utility Property ===
+        IEqualityComparer<IItem> EqualityComparer { get; set; }
+
+        #endregion IEquatable<IItem> Implementation
+        
     }
 }

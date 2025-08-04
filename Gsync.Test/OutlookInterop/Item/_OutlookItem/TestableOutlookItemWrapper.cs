@@ -89,6 +89,24 @@ namespace Gsync.Test.OutlookInterop.Item
             cancel = (bool)args[0];
         }
 
+        public new string MessageId
+        {
+            get => base.MessageId;
+            set => base.MessageId = value;
+        }
+
+        public new string RawHeaders
+        {
+            get => base.RawHeaders;
+            set => base.RawHeaders = value;
+        }
+
+        public new string RawHeadersNormalized
+        {
+            get => base.RawHeadersNormalized;
+            set => base.RawHeadersNormalized = value;
+        }
+        
         protected override void ReleaseComObject(object comObj)
         {
             if (comObj != null && IsComObjectFunc(comObj))

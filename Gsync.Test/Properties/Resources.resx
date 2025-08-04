@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="RealHeader" xml:space="preserve">
+    <value>Delivered-To: drmoisan@gmail.com
+Received: by 2002:a05:6214:2d17:b0:6f4:c961:3b2c with SMTP id mz23csp5522017qvb;
+        Sat, 17 May 2025 00:00:20 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFNNiF6a/FxJoh0dcqIPBdmdfcVlTCq9QRZH6N39zerQvU4lM+FFboxlMbzMdljCPYRmABi
+X-Received: by 2002:a05:6a20:5484:b0:1f5:8de8:3b1a with SMTP id adf61e73a8af0-2170cc65e30mr8998116637.13.1747465220506;
+        Sat, 17 May 2025 00:00:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1747465220; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DVNypCALi6S66P0t6X2l2KbiYRuQmtpnNsrEaVRg2ur+M7zX9Qqw54NQl60rdwVThi
+         wwCo5A3An5bZJQ+WbvnK7PxSmMRF4dAzXwDEgXo9db2sUJGx7uw+aGiGDBqLdH+DPbo9
+         gTq75CWpHRXapgV5X3V1MV+F2THftf+4AbV9v2SzkzAvkyhrc68eHPgUYTpd9ouBQ+jf
+         h0qsQM/abMMQS0dE/feu6cQCaKLi6iVJXAnWLvyAj1msO5fKS/3Cbb0KppI5ebEIU3Al
+         Dx1tSo8LbRiC34oJ1P65qLkMhoHNZUCmWroTHSU+/lYqTSsFZVCHLpGCoMCQMFhxry7Z
+         Pqjg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=mime-version:subject:message-id:to:reply-to:from:date
+         :dkim-signature:dkim-filter;
+        bh=EXffqaMRmvPOYen+ldhuYYuMsnd+ifK4FeHCQhZliRg=;
+        fh=ysmjOlXw78Ze9Z1zO+XLs8Tck0yXqoIIoTrvlqn+qnc=;
+        b=G4EXQOXSncWqLVhgGV33/g1UKs0wiw5KRC7grpITK0b0pYgC/0IUWbjXiZEwKwXNhd
+         yd4CR/V3c4Q9SJq5BrLWoEDNSavUuQRpn1eRYLQNl5+1isD8Sf+Cpr/Lm+a7T607lzrW
+         +zzwPBAGXe/miNOzqGCO5645NSDy9bDG2iJ4KdlfdtNOExWgFTrhQ/SFd2oCrGkXlAIG
+         iEgJb1y6cxvWvM5lkJqhEN5JZqUpuayWEbR2UVDW1WI7spZC1KjDkb5KoCNmMlszmdAn
+         GEyIvNWEFD/TRioe4rQEzl7BE5gWS3MIJoDwIx8HtpR2hVb1dmpURI45uoGumjFN9aVF
+         JkXw==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@power2patient.com header.s=prod header.b=TZFxtrwM;
+       spf=pass (google.com: domain of customersupport@power2patient.com designates 8.26.64.24 as permitted sender) smtp.mailfrom=customersupport@power2patient.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=power2patient.com
+Return-Path: &lt;customersupport@power2patient.com&gt;
+Received: from prod-mail2.power2practice.net (prod-mail2.power2practice.net. [8.26.64.24])
+        by mx.google.com with ESMTP id 98e67ed59e1d1-30e7d592945si4116514a91.107.2025.05.17.00.00.20
+        for &lt;drmoisan@gmail.com&gt;;
+        Sat, 17 May 2025 00:00:20 -0700 (PDT)
+Received-SPF: pass (google.com: domain of customersupport@power2patient.com designates 8.26.64.24 as permitted sender) client-ip=8.26.64.24;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@power2patient.com header.s=prod header.b=TZFxtrwM;
+       spf=pass (google.com: domain of customersupport@power2patient.com designates 8.26.64.24 as permitted sender) smtp.mailfrom=customersupport@power2patient.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=power2patient.com
+Received: from p2p-lc-prod-emr1 (unknown [10.0.95.9])
+	by prod-mail2.power2practice.net (Postfix) with ESMTP id 1644820FCF
+	for &lt;drmoisan@gmail.com&gt;; Sat, 17 May 2025 07:00:20 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 prod-mail2.power2practice.net 1644820FCF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=power2patient.com;
+	s=prod; t=1747465220;
+	bh=gImLwV81ekppxV6fP6Gn1aN0fLQ3ZsUEUPZktKr6yME=;
+	h=Date:From:Reply-To:To:Subject:From;
+	b=TZFxtrwMpdZa3bVXSFmD+8DZO7xRhLjKOs0j5UrhsegozrxlmOA482cnILQ/e6njx
+	 NOKbmQ1yum6DqfLkXrIxY0RzuL6LPKK3SKK2gXEsJZHydtzRw3CrDacKn9nwnnPWrJ
+	 qmtZmdMdLUINeZwPeddEkjLOPTbcjG/djt/Mj/XY=
+Date: Sat, 17 May 2025 00:00:20 -0700 (PDT)
+From: Medical Transformation Center &lt;customersupport@power2patient.com&gt;
+Reply-To: Medical Transformation Center &lt;noreply@power2practice.com&gt;
+To: drmoisan@gmail.com
+Message-ID: &lt;433998005.8519.1747465220084@p2p-lc-prod-emr1&gt;
+Subject: Medical Transformation Center - Power2Patient Lab Test Results
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_8517_1203015853.1747465220082"</value>
+  </data>
+</root>

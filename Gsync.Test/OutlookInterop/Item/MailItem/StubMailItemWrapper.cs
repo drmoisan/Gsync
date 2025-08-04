@@ -9,10 +9,15 @@ using Microsoft.Office.Interop.Outlook;
 
 namespace Gsync.OutlookInterop.Item
 {
-    public class StubOutlookItemWrapper : OutlookItemWrapper
+    public class StubMailItemWrapper : MailItemWrapper
     {
-        public StubOutlookItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
+        public StubMailItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
             : base(item, comEvents, supportedTypes) { }
     }
+    //public class StubOutlookItemWrapper : OutlookItemWrapper
+    //{
+    //    public StubOutlookItemWrapper(object item, ItemEvents_10_Event comEvents, ImmutableHashSet<string> supportedTypes)
+    //        : base(item, comEvents, supportedTypes) { }
+    //}
 
 }

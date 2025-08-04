@@ -36,11 +36,7 @@ namespace Gsync.Test.OutlookInterop.Item
             mock.SetupGet(m => m.Size).Returns(1234);
             mock.SetupGet(m => m.Subject).Returns("Test Subject");
             mock.SetupGet(m => m.UnRead).Returns(true);
-            //TODO: Move to MailItem
-            //mock.SetupGet(m => m.ConversationID).Returns("ConvId");
-            //mock.SetupGet(m => m.HTMLBody).Returns("HtmlBody");
-            //mock.SetupGet(m => m.SenderEmailAddress).Returns("foo@bar.com");
-            //mock.SetupGet(m => m.SenderName).Returns("FooBar");
+            
             // Parent as MAPIFolder
             var folderMock = new Mock<MAPIFolder>();
             folderMock.SetupGet(f => f.StoreID).Returns("storeId123");
@@ -60,34 +56,31 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void Constructor_CopiesValueProperties()
         {
-            var mock = CreateMockItem();
-            var detached = new DetachedOutlookItem(mock.Object);
+            var mock = CreateMockItem().Object;
+            var detached = new DetachedOutlookItem(mock);
 
-            Assert.AreEqual("BillInfo", detached.BillingInformation);
-            Assert.AreEqual("BodyValue", detached.Body);
-            Assert.AreEqual("Cats", detached.Categories);
-            Assert.AreEqual(OlObjectClass.olMail, detached.Class);
-            Assert.AreEqual("MyCo", detached.Companies);
-            Assert.AreEqual("ConvId", detached.ConversationID);
-            Assert.AreEqual(mock.Object.CreationTime, detached.CreationTime);
-            Assert.AreEqual("itemEntryId", detached.EntryID);
-            Assert.AreEqual("HtmlBody", detached.HTMLBody);
-            Assert.AreEqual(OlImportance.olImportanceHigh, detached.Importance);
-            Assert.AreEqual(mock.Object.LastModificationTime, detached.LastModificationTime);
-            Assert.AreEqual("IPM.Note", detached.MessageClass);
-            Assert.AreEqual("100mi", detached.Mileage);
-            Assert.AreEqual(true, detached.NoAging);
-            Assert.AreEqual(42, detached.OutlookInternalVersion);
-            Assert.AreEqual("16.0", detached.OutlookVersion);
-            Assert.AreEqual(true, detached.Saved);
-            Assert.AreEqual("foo@bar.com", detached.SenderEmailAddress);
-            Assert.AreEqual("FooBar", detached.SenderName);
-            Assert.AreEqual(OlSensitivity.olPrivate, detached.Sensitivity);
-            Assert.AreEqual(1234, detached.Size);
-            Assert.AreEqual("Test Subject", detached.Subject);
-            Assert.AreEqual(true, detached.UnRead);
-            Assert.AreEqual("storeId123", detached.StoreID);
-            Assert.AreEqual("folderEntryId456", detached.ParentFolderEntryID);
+            Assert.AreEqual(mock.BillingInformation, detached.BillingInformation);
+            Assert.AreEqual(mock.Body, detached.Body);
+            Assert.AreEqual(mock.Categories, detached.Categories);
+            Assert.AreEqual(mock.Class, detached.Class);
+            Assert.AreEqual(mock.Companies, detached.Companies);
+            Assert.AreEqual(mock.ConversationID, detached.ConversationID);
+            Assert.AreEqual(mock.CreationTime, detached.CreationTime);
+            Assert.AreEqual(mock.EntryID, detached.EntryID);            
+            Assert.AreEqual(mock.Importance, detached.Importance);
+            Assert.AreEqual(mock.LastModificationTime, detached.LastModificationTime);
+            Assert.AreEqual(mock.MessageClass, detached.MessageClass);
+            Assert.AreEqual(mock.Mileage, detached.Mileage);
+            Assert.AreEqual(mock.NoAging, detached.NoAging);
+            Assert.AreEqual(mock.OutlookInternalVersion, detached.OutlookInternalVersion);
+            Assert.AreEqual(mock.OutlookVersion, detached.OutlookVersion);
+            Assert.AreEqual(mock.Saved, detached.Saved);                        
+            Assert.AreEqual(mock.Sensitivity, detached.Sensitivity);
+            Assert.AreEqual(mock.Size, detached.Size);
+            Assert.AreEqual(mock.Subject, detached.Subject);
+            Assert.AreEqual(mock.UnRead, detached.UnRead);
+            Assert.AreEqual((mock.Parent as MAPIFolder).StoreID, detached.StoreID);
+            Assert.AreEqual((mock.Parent as MAPIFolder).EntryID, detached.ParentFolderEntryID);
         }
 
         [TestMethod]
@@ -119,8 +112,7 @@ namespace Gsync.Test.OutlookInterop.Item
             Assert.ThrowsException<NotSupportedException>(() => detached.Move(null));
             Assert.ThrowsException<NotSupportedException>(() => detached.PrintOut());
             Assert.ThrowsException<NotSupportedException>(() => detached.Save());
-            Assert.ThrowsException<NotSupportedException>(() => detached.SaveAs("x"));
-            Assert.ThrowsException<NotSupportedException>(() => detached.ShowCategoriesDialog());
+            Assert.ThrowsException<NotSupportedException>(() => detached.SaveAs("x"));            
         }
 
         [TestMethod]

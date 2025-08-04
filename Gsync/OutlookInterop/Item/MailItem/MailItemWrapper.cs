@@ -9,7 +9,7 @@ using System.Reflection;
 namespace Gsync.OutlookInterop.Item
 {
     public class MailItemWrapper : OutlookItemWrapper, IMailItem
-    {                        
+    {                                
         private MailItem _mailItem;
         private bool _mailItemEventsAttached = false;
 
@@ -63,8 +63,7 @@ namespace Gsync.OutlookInterop.Item
         {
             get => _dyn.CC;
             set => _dyn.CC = value;
-        }
-        public string ConversationID => _dyn.ConversationID;
+        }        
         public string DeferredDeliveryTime
         {
             get => _dyn.DeferredDeliveryTime;
@@ -85,6 +84,7 @@ namespace Gsync.OutlookInterop.Item
             get => _dyn.HTMLBody;
             set => _dyn.HTMLBody = value;
         }
+        public ItemProperties ItemProperties => _dyn.ItemProperties;
         public string ReceivedByName => _dyn.ReceivedByName;
         public string ReceivedOnBehalfOfName => _dyn.ReceivedOnBehalfOfName;
         public DateTime ReceivedTime => _dyn.ReceivedTime;
@@ -160,6 +160,7 @@ namespace Gsync.OutlookInterop.Item
         public MailItem Reply() => _dyn.Reply();
         public MailItem ReplyAll() => _dyn.ReplyAll();
         public void Send() => _dyn.Send();
+        public void ShowCategoriesDialog() => _dyn.ShowCategoriesDialog();
 
         // --- IMailItem Events ---
 
@@ -268,14 +269,14 @@ namespace Gsync.OutlookInterop.Item
 
         #region IEquatable<IMailItem> Implementation
 
-        private IEqualityComparer<IMailItem> _equalityComparer = new IItemEqualityComparer();
+        private IEqualityComparer<IMailItem> _equalityComparer = new MailItemEqualityComparer();
         /// <summary>
         /// Gets or sets the equality comparer used for IEquatable<IItem> implementation.
         /// </summary>
         public new IEqualityComparer<IMailItem> EqualityComparer
         {
             get => _equalityComparer;
-            set => _equalityComparer = value ?? new IItemEqualityComparer();
+            set => _equalityComparer = value ?? new MailItemEqualityComparer();
         }
 
 #nullable enable

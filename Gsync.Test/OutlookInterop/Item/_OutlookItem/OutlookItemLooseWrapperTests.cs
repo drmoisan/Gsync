@@ -477,17 +477,7 @@ namespace Gsync.Test.OutlookInterop.Item
             wrapper.SaveAs("path", "type");
             mock.Verify(m => m.SaveAs("path", "type"), Times.Once);
         }
-
-        [TestMethod]
-        public void ShowCategoriesDialog_Method_CallsUnderlying()
-        {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.ShowCategoriesDialog()).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.ShowCategoriesDialog();
-            mock.Verify(m => m.ShowCategoriesDialog(), Times.Once);
-        }
-
+                
         [TestMethod]
         public void TryGet_LogsExceptionAndReturnsDefault()
         {

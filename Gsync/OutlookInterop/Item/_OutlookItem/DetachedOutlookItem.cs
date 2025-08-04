@@ -29,6 +29,7 @@ namespace Gsync.OutlookInterop.Item
             Categories = item.Categories;
             Class = item.Class;
             Companies = item.Companies;
+            ConversationID = item.ConversationID; 
             CreationTime = item.CreationTime;
             EntryID = item.EntryID;
             Importance = item.Importance;
@@ -48,9 +49,17 @@ namespace Gsync.OutlookInterop.Item
             ConversationTopic = item.ConversationTopic;
             FormDescription = item.FormDescription;
 
+            AutoResolvedWinner = item.AutoResolvedWinner;            
+            DownloadState = item.DownloadState;
+            IsConflict = item.IsConflict;
+            
+            
+
             var folder = item.Parent as MAPIFolder;
             StoreID = folder?.StoreID;
             ParentFolderEntryID = folder?.EntryID;
+            MessageId = item.MessageId;
+            RawHeaders = item.RawHeaders;
 
             //TODO: Move to DetachedMailItem
             //ConversationID = item.ConversationID;
@@ -125,8 +134,7 @@ namespace Gsync.OutlookInterop.Item
         public string ConversationTopic { get; set; }
         public DateTime CreationTime { get; set; }
         public string EntryID { get; set; }
-        public string FormDescription { get; set; }
-        public string HTMLBody { get; set; }
+        public string FormDescription { get; set; }        
         public OlImportance Importance { get; set; }
         public DateTime LastModificationTime { get; set; }
         public string MessageClass { get; set; }
@@ -134,18 +142,25 @@ namespace Gsync.OutlookInterop.Item
         public bool NoAging { get; set; }
         public int OutlookInternalVersion { get; set; }
         public string OutlookVersion { get; set; }
-        public bool Saved { get; set; }
-        public string SenderEmailAddress { get; set; }
-        public string SenderName { get; set; }
+        public bool Saved { get; set; }                
         public OlSensitivity Sensitivity { get; set; }
         public int Size { get; set; }
         public string Subject { get; set; }
         public bool UnRead { get; set; }
+        // TODO: Write Unit tests for these properties
+        public bool AutoResolvedWinner { get; set;  }
+        public Conflicts Conflicts => null;
+        public OlDownloadState DownloadState { get; set; }
+        public bool IsConflict { get; set;  }
+        public Links Links => null;
+        public PropertyAccessor PropertyAccessor => null;
 
         // --- Optionally store parent folder ID for session-scoped reattachment ---
         public string ParentFolderEntryID { get; set; }
-
         public string StoreID { get; set; }
+
+        public string MessageId { get; set; } 
+        public string RawHeaders { get; set; }
 
         #endregion IItem Properties Implementation
 
@@ -175,10 +190,7 @@ namespace Gsync.OutlookInterop.Item
 
         public void SaveAs(string Path, object Type = null) =>
             throw new NotSupportedException("This DetachedOutlookItem is not connected to Outlook.");
-
-        public void ShowCategoriesDialog() =>
-            throw new NotSupportedException("This DetachedOutlookItem is not connected to Outlook.");
-
+                
         #endregion IItem Methods Implementation
 
         #region IItem Events Implementation

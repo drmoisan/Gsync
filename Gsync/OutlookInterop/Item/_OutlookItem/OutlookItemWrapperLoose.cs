@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace Gsync.OutlookInterop.Item
 {
@@ -58,6 +59,7 @@ namespace Gsync.OutlookInterop.Item
             // Set up COM event bridge
 
             AttachComEvents();
+            ResetLazy();
             return this;
         }
 
@@ -88,6 +90,40 @@ namespace Gsync.OutlookInterop.Item
         #endregion Private Fields and Properties
 
         #region Private Helper Methods
+
+        protected virtual string GetRawHeaders()
+        {
+            try
+            {
+                string headers = PropertyAccessor?.GetProperty(
+                    "http://schemas.microsoft.com/mapi/proptag/0x007D001E") as string;
+
+                if (string.IsNullOrWhiteSpace(headers)) return null;
+                return headers;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        protected virtual string GetMessageId()
+        {
+            try
+            {
+                // Extract Message-ID using regex
+                var match = Regex.Match(RawHeaders, @"^Message-ID:\s*<?(.+?)>?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+                return match.Success ? match.Groups[1].Value : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        protected virtual void ResetLazy()
+        {
+            _rawHeaders = new Lazy<string>(() => TryGet(GetRawHeaders));
+            _messageId = new Lazy<string>(() => TryGet(GetMessageId));
+        }
 
         // --- Helper safe wrappers ---
         protected virtual bool IsComObjectFunc(object obj)
@@ -126,6 +162,26 @@ namespace Gsync.OutlookInterop.Item
 
         #region IItem Properties Implementation
 
+        protected Lazy<string> _messageId;
+        public string MessageId
+        {
+            get => _messageId.Value;
+            protected set => _messageId = value.ToLazy();
+        }
+
+        protected Lazy<string> _rawHeaders;
+        public string RawHeaders
+        {
+            get => _rawHeaders.Value;
+            protected set => _rawHeaders = value.ToLazy();
+        }
+        public bool AutoResolvedWinner => TryGet(() => _dyn.AutoResolvedWinner);
+        public Conflicts Conflicts => TryGet(() => _dyn.Conflicts);
+        public OlDownloadState DownloadState => TryGet(() => _dyn.DownloadState);
+        public bool IsConflict => TryGet(() => _dyn.IsConflict);
+        public Links Links => TryGet(() => _dyn.Links);
+        public PropertyAccessor PropertyAccessor => TryGet(() => _dyn.PropertyAccessor);
+      
         // Forward properties (expand as needed)
         public Application Application => TryGet(() => (Application)_dyn.Application);
         public Attachments Attachments => TryGet(() => (Attachments)_dyn.Attachments);
@@ -260,11 +316,7 @@ namespace Gsync.OutlookInterop.Item
         public void SaveAs(string Path, object Type = null)
         {
             TrySet(() => { if (Type != null) _dyn.SaveAs(Path, Type); else _dyn.SaveAs(Path); });
-        }
-        public void ShowCategoriesDialog()
-        {
-            TrySet(() => _dyn.ShowCategoriesDialog());
-        }
+        }        
 
         #endregion IItem Method Implementation
         

@@ -324,7 +324,7 @@ namespace Gsync.Utilities.Extensions
         public static bool IsArray<T>(this object container) => container.GetType().IsArray && typeof(T).IsAssignableFrom(container.GetType().GetElementType());
         public static bool IsArray(this object container) => container.GetType().IsArray;
 
-        //TODO: Implement IsTringArrayTree
+        //TODO: Implement IsStringArrayTree
         internal static bool IsStringArrayTree(this object[] branches, bool strictValidation)
         {
             return false;

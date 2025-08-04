@@ -28,13 +28,13 @@ namespace Gsync.OutlookInterop.Interfaces.Items
         string SenderEmailType { get; }
         string SentOnBehalfOfName { get; set; }
         DateTime SentOn { get; }
+        void ShowCategoriesDialog();
         bool Submitted { get; }
         string To { get; set; }
         string VotingOptions { get; set; }
         string VotingResponse { get; set; }
 
-        // --- Added properties ---
-        string ConversationID { get; }
+        // --- Added properties ---        
         string HTMLBody { get; set; }        
         ItemProperties ItemProperties { get; }
         string SenderEmailAddress { get; }

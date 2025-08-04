@@ -1,4 +1,5 @@
-﻿using Gsync.Utilities.Interfaces;
+﻿using Gsync.OutlookInterop.Item;
+using Gsync.Utilities.Interfaces;
 using Microsoft.Office.Interop.Outlook;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace Gsync.Ribbon
 
         #region Methods
 
-        public void LoopInbox() 
+        public void LoopInboxOld() 
         {
             var accountInboxes = Globals.StoresWrapper.Stores.Select(x => (x.Account, x.Inbox)).ToArray();
             foreach (var accountInbox in accountInboxes)
@@ -53,7 +54,41 @@ namespace Gsync.Ribbon
                 }
             }
         }
-        
+
+        public void LoopInbox() 
+        { 
+            TraverseInbox<object>(LogMessageHeaders);
+        }
+
+        public void LogMessageHeaders(object objItem) 
+        { 
+            var item = new OutlookItemWrapper(objItem);
+            if (item == null)
+            {
+                logger.Error("Item is null, cannot log headers.");
+                return;
+            }
+            else
+            {
+                logger.Debug($"Item with subject '{item.Subject}' has the following headers:\n" +
+                    $"{item.RawHeaders}");
+            }
+        }
+
+        public void TraverseInbox<T> (System.Action<T> action) where T : class
+        {
+            var accountInboxes = Globals.StoresWrapper.Stores.Select(x => (x.Account, x.Inbox)).ToArray();
+            foreach (var accountInbox in accountInboxes)
+            {
+                logger.Debug($"Processing Inbox: {accountInbox.Account.DisplayName} {accountInbox.Inbox.Name}");
+                var items = accountInbox.Inbox.Items.Cast<T>().ToArray();
+                foreach (T item in items)
+                {
+                    action(item);
+                }
+            }
+        }
+
         public void MessageClassesInbox()
         {
             var accountInboxes = Globals.StoresWrapper.Stores.Select(x => (x.Account,x.Inbox)).ToArray();

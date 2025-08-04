@@ -59,6 +59,7 @@
     <Compile Include="OutlookInterop\Item\MailItem\DetachedMailItemTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\MailItemEqualityComparerTests.cs" />
     <Compile Include="OutlookInterop\Item\MailItem\MailItemSimilarityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\DynamicIItem.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\IItemEqualityComparerTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\IItemSimilarityComparerTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemTypeTests.cs" />
@@ -72,6 +73,11 @@
     <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapperTests.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\DetachedOutlookItemTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\Extensions\CompilerServices\CallerArgumentExpressionAttributeTests.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\FakeFileSystem.cs" />
@@ -111,7 +117,12 @@
       <Name>Gsync</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

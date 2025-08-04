@@ -19,23 +19,79 @@ namespace Gsync.Test.OutlookInterop.Item
     [TestClass]
     public class OutlookItemWrapperTests
     {
+        private Mock<IItem> _itemMock;
+        private IItem _item;
+        private Mock<ItemEvents_10_Event> _eventsMock;
+        private ItemEvents_10_Event _events;
+        private OutlookItemWrapper _wrapper;
+        private DynamicIItem _dynItem;
+        private ImmutableHashSet<string> _supportedTypes;
+
         [TestInitialize]
         public void Setup()
         {
             Console.SetOut(new DebugTextWriter());
+            
+            _itemMock = CreateIItemMock();            
+            _eventsMock = new Mock<ItemEvents_10_Event>();
+            _dynItem = new DynamicIItem();
         }
 
-        private Mock<MailItem> CreateMailItemMock()
+        private Mock<IItem> CreateIItemMock()
         {
-            var mock = new Mock<MailItem>();
+            var mock = new Mock<IItem>();
             mock.SetupAllProperties();
             return mock;
         }
 
-        private OutlookItemWrapper CreateWrapper(Mock<MailItem> mock)
+        private OutlookItemWrapper CreateWrapper(IItem item, ItemEvents_10_Event events, ImmutableHashSet<string> supportedTypes)
         {
+            return new TestableOutlookItemWrapper(item, events, supportedTypes);
+        }
+
+        private OutlookItemWrapper CreateWrapper(DynamicIItem dyn, IItem item, ItemEvents_10_Event events, ImmutableHashSet<string> supportedTypes)
+        {
+            var wrapper = (OutlookItemWrapper)Activator.CreateInstance(
+                typeof(OutlookItemWrapper),
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { item, events, supportedTypes },
+                null
+            );
+            var dynField = typeof(OutlookItemWrapper).GetField("_dyn", BindingFlags.NonPublic | BindingFlags.Instance);
+            dynField.SetValue(wrapper, dyn);
+            return wrapper;
+        }
+
+        private OutlookItemWrapper CreateWrapper(Mock<IItem> mock)
+        {            
             return new OutlookItemWrapper(mock.Object);
         }
+
+        private bool ProtectedIsComObjectFunc(object obj) 
+        {
+            var wrapper = CreateWrapper(_dynItem, _itemMock.Object, _eventsMock.Object, _supportedTypes);
+            var protectedIsComObjectFunc = wrapper.GetType()
+                .GetMethod(
+                "IsComObjectFunc",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic);
+
+            if (protectedIsComObjectFunc is null) { throw new InvalidOperationException("Method IsComObjectFunc not found"); }
+
+            var result = protectedIsComObjectFunc.Invoke(wrapper, new object[] { obj });
+            if (result is null) { throw new InvalidOperationException("Method IsComObjectFunc returned null"); }
+            return (bool)result;
+        }
+
+        private void LockMockObjects()
+        {
+            _item = _itemMock.Object;
+            _events = _eventsMock.Object;
+            _supportedTypes = ImmutableHashSet.Create(_item.GetType().Name);
+            _wrapper = CreateWrapper(_item, _events, _supportedTypes);
+        }
+
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
@@ -56,81 +112,90 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void Application_Property_ReturnsValue()
         {
-            var mockMail = CreateMailItemMock();
+            // Arrange
             var app = new Mock<Application>().Object;
-            mockMail.Setup(m => m.Application).Returns(app);
-            var wrapper = CreateWrapper(mockMail);
-            var app2 = wrapper.Application;
-            Assert.AreEqual(app, wrapper.Application);
+            _itemMock.Setup(m => m.Application).Returns(app);
+            LockMockObjects();
+            
+            // Act
+            var app2 = _wrapper.Application;
+
+            // Assert
+            Assert.AreEqual(app, _wrapper.Application);
         }
 
         [TestMethod]
         public void Attachments_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var attachments = new Mock<Attachments>().Object;
-            mock.Setup(m => m.Attachments).Returns(attachments);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(attachments, wrapper.Attachments);
+            _itemMock.Setup(m => m.Attachments).Returns(attachments);
+            LockMockObjects();
+            Assert.AreEqual(attachments, _wrapper.Attachments);
         }
 
         [TestMethod]
         public void BillingInformation_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.BillingInformation, "Test");
-            var wrapper = CreateWrapper(mock);
-            wrapper.BillingInformation = "NewValue";
-            Assert.AreEqual("NewValue", wrapper.BillingInformation);
+            _itemMock.SetupProperty(m => m.BillingInformation, "Test");
+            LockMockObjects();            
+            Assert.AreEqual("Test", _wrapper.BillingInformation);
+            _wrapper.BillingInformation = "NewValue";
+            Assert.AreEqual("NewValue", _wrapper.BillingInformation);
         }
 
         [TestMethod]
         public void Body_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Body, "TestBody");
-            var wrapper = CreateWrapper(mock);
-            wrapper.Body = "NewBody";
-            Assert.AreEqual("NewBody", wrapper.Body);
+            _itemMock.SetupProperty(m => m.Body, "TestBody");
+            LockMockObjects();
+            Assert.AreEqual("TestBody", _wrapper.Body);
+            _wrapper.Body = "NewBody";
+            Assert.AreEqual("NewBody", _wrapper.Body);
         }
 
         [TestMethod]
         public void Categories_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Categories, "TestCat");
-            var wrapper = CreateWrapper(mock);
-            wrapper.Categories = "NewCat";
-            Assert.AreEqual("NewCat", wrapper.Categories);
+            _itemMock.SetupProperty(m => m.Categories, "TestCat");
+            LockMockObjects();
+            Assert.AreEqual("TestCat", _wrapper.Categories);
+            _wrapper.Categories = "NewCat";
+            Assert.AreEqual("NewCat", _wrapper.Categories);
         }
 
         [TestMethod]
         public void Class_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Class).Returns(OlObjectClass.olMail);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(OlObjectClass.olMail, wrapper.Class);
+            _itemMock.Setup(m => m.Class).Returns(OlObjectClass.olMail);
+            LockMockObjects();
+            Assert.AreEqual(OlObjectClass.olMail, _wrapper.Class);
         }
 
         [TestMethod]
         public void Companies_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Companies, "TestCo");
-            var wrapper = CreateWrapper(mock);
-            wrapper.Companies = "NewCo";
-            Assert.AreEqual("NewCo", wrapper.Companies);
+            _itemMock.SetupProperty(m => m.Companies, "TestCo");
+            LockMockObjects();
+            Assert.AreEqual("TestCo", _wrapper.Companies);
+            _wrapper.Companies = "NewCo";
+            Assert.AreEqual("NewCo", _wrapper.Companies);
         }
-                
+
+        [TestMethod]
+        public void ConversationID_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.ConversationID).Returns("ConvId");
+            LockMockObjects();
+            Assert.AreEqual("ConvId", _wrapper.ConversationID);
+        }
+
         [TestMethod]
         public void CreationTime_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
             var dt = DateTime.Now;
-            mock.Setup(m => m.CreationTime).Returns(dt);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(dt, wrapper.CreationTime);
+            _itemMock.Setup(m => m.CreationTime).Returns(dt);
+            LockMockObjects();
+            Assert.AreEqual(dt, _wrapper.CreationTime);
         }
 
         [TestMethod]
@@ -178,165 +243,155 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void EntryID_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.EntryID).Returns("EntryId");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("EntryId", wrapper.EntryID);
+            _itemMock.Setup(m => m.EntryID).Returns("EntryId");
+            LockMockObjects();
+            Assert.AreEqual("EntryId", _wrapper.EntryID);
         }
-        
+
         [TestMethod]
         public void Importance_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Importance, OlImportance.olImportanceNormal);
-            var wrapper = CreateWrapper(mock);
-            wrapper.Importance = OlImportance.olImportanceHigh;
-            Assert.AreEqual(OlImportance.olImportanceHigh, wrapper.Importance);
+            _itemMock.SetupProperty(m => m.Importance, OlImportance.olImportanceNormal);
+            LockMockObjects();
+            Assert.AreEqual(OlImportance.olImportanceNormal, _wrapper.Importance);
+            _wrapper.Importance = OlImportance.olImportanceHigh;
+            Assert.AreEqual(OlImportance.olImportanceHigh, _wrapper.Importance);
         }
 
-        [TestMethod]
-        public void ItemProperties_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
-            var itemProps = new Mock<ItemProperties>().Object;
-            mock.Setup(m => m.ItemProperties).Returns(itemProps);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(itemProps, wrapper.ItemProperties);
-        }
+        //[TestMethod]
+        //public void ItemProperties_Property_ReturnsValue()
+        //{
+        //    var mock = CreateIItemMock();
+        //    var itemProps = new Mock<ItemProperties>().Object;
+        //    mock.Setup(m => m.ItemProperties).Returns(itemProps);
+        //    var _wrapper.= CreateWrapper(mock);
+        //    Assert.AreEqual(itemProps, _wrapper.ItemProperties);
+        //}
 
         [TestMethod]
         public void LastModificationTime_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var dt = DateTime.Now;
-            mock.Setup(m => m.LastModificationTime).Returns(dt);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(dt, wrapper.LastModificationTime);
+            _itemMock.Setup(m => m.LastModificationTime).Returns(dt);
+            LockMockObjects();
+            Assert.AreEqual(dt, _wrapper.LastModificationTime);
         }
 
         [TestMethod]
         public void MessageClass_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.MessageClass).Returns("IPM.Note");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("IPM.Note", wrapper.MessageClass);
+            _itemMock.Setup(m => m.MessageClass).Returns("IPM.Note");
+            LockMockObjects();
+            Assert.AreEqual("IPM.Note", _wrapper.MessageClass);
         }
 
         [TestMethod]
         public void Mileage_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Mileage, "TestMileage");
-            var wrapper = CreateWrapper(mock);
-            wrapper.Mileage = "NewMileage";
-            Assert.AreEqual("NewMileage", wrapper.Mileage);
+            _itemMock.SetupProperty(m => m.Mileage, "TestMileage");
+            LockMockObjects();
+            Assert.AreEqual("TestMileage", _wrapper.Mileage);
+            _wrapper.Mileage = "NewMileage";
+            Assert.AreEqual("NewMileage", _wrapper.Mileage);
         }
 
         [TestMethod]
         public void NoAging_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.NoAging, false);
-            var wrapper = CreateWrapper(mock);
-            wrapper.NoAging = true;
-            Assert.IsTrue(wrapper.NoAging);
+            _itemMock.SetupProperty(m => m.NoAging, false);
+            LockMockObjects();
+            Assert.IsFalse(_wrapper.NoAging);
+            _wrapper.NoAging = true;
+            Assert.IsTrue(_wrapper.NoAging);
         }
 
         [TestMethod]
         public void OutlookInternalVersion_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.OutlookInternalVersion).Returns(1234);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(1234, wrapper.OutlookInternalVersion);
+            _itemMock.Setup(m => m.OutlookInternalVersion).Returns(1234);
+            LockMockObjects();
+            Assert.AreEqual(1234, _wrapper.OutlookInternalVersion);
         }
 
         [TestMethod]
         public void OutlookVersion_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.OutlookVersion).Returns("16.0");
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual("16.0", wrapper.OutlookVersion);
+            _itemMock.Setup(m => m.OutlookVersion).Returns("16.0");
+            LockMockObjects();
+            Assert.AreEqual("16.0", _wrapper.OutlookVersion);
         }
 
         [TestMethod]
         public void Parent_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var parent = new object();
-            mock.Setup(m => m.Parent).Returns(parent);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(parent, wrapper.Parent);
+            _itemMock.Setup(m => m.Parent).Returns(parent);
+            LockMockObjects();
+            Assert.AreEqual(parent, _wrapper.Parent);
         }
 
         [TestMethod]
         public void Saved_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Saved).Returns(true);
-            var wrapper = CreateWrapper(mock);
-            Assert.IsTrue(wrapper.Saved);
+            _itemMock.Setup(m => m.Saved).Returns(true);
+            LockMockObjects();
+            Assert.IsTrue(_wrapper.Saved);
         }
 
         [TestMethod]
         public void Sensitivity_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Sensitivity, OlSensitivity.olNormal);
-            var wrapper = CreateWrapper(mock);
-            wrapper.Sensitivity = OlSensitivity.olConfidential;
-            Assert.AreEqual(OlSensitivity.olConfidential, wrapper.Sensitivity);
+            _itemMock.SetupProperty(m => m.Sensitivity, OlSensitivity.olNormal);
+            LockMockObjects();
+            Assert.AreEqual(OlSensitivity.olNormal, _wrapper.Sensitivity);
+            _wrapper.Sensitivity = OlSensitivity.olConfidential;
+            Assert.AreEqual(OlSensitivity.olConfidential, _wrapper.Sensitivity);
         }
 
         [TestMethod]
         public void Session_Property_ReturnsValue()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var session = new Mock<NameSpace>().Object;
-            mock.Setup(m => m.Session).Returns(session);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(session, wrapper.Session);
+            _itemMock.Setup(m => m.Session).Returns(session);
+            LockMockObjects();
+            Assert.AreEqual(session, _wrapper.Session);
         }
 
         [TestMethod]
         public void Size_Property_ReturnsValue()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Size).Returns(42);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(42, wrapper.Size);
+            _itemMock.Setup(m => m.Size).Returns(42);
+            LockMockObjects();
+            Assert.AreEqual(42, _wrapper.Size);
         }
 
         [TestMethod]
         public void Subject_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.Subject, "TestSubject");
-            var wrapper = CreateWrapper(mock);
-            wrapper.Subject = "NewSubject";
-            Assert.AreEqual("NewSubject", wrapper.Subject);
+            _itemMock.SetupProperty(m => m.Subject, "TestSubject");
+            LockMockObjects();
+            Assert.AreEqual("TestSubject", _wrapper.Subject);
+            _wrapper.Subject = "NewSubject";
+            Assert.AreEqual("NewSubject", _wrapper.Subject);
         }
 
         [TestMethod]
         public void UnRead_Property_GetSet()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupProperty(m => m.UnRead, false);
-            var wrapper = CreateWrapper(mock);
-            wrapper.UnRead = true;
-            Assert.IsTrue(wrapper.UnRead);
+            _itemMock.SetupProperty(m => m.UnRead, false);
+            LockMockObjects();
+            Assert.IsFalse(_wrapper.UnRead);
+            _wrapper.UnRead = true;
+            Assert.IsTrue(_wrapper.UnRead);
         }
 
         [TestMethod]
         public void Close_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Close(It.IsAny<OlInspectorClose>())).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.Close(OlInspectorClose.olSave);
-            mock.Verify(m => m.Close(OlInspectorClose.olSave), Times.Once);
+            _itemMock.Setup(m => m.Close(It.IsAny<OlInspectorClose>())).Verifiable();
+            LockMockObjects();
+            _wrapper.Close(OlInspectorClose.olSave);
+            _itemMock.Verify(m => m.Close(OlInspectorClose.olSave), Times.Once);
         }
 
         [TestMethod]
@@ -375,8 +430,8 @@ namespace Gsync.Test.OutlookInterop.Item
             }.ToImmutableHashSet();
             var mockEvents = new Mock<ItemEvents_10_Event>();
 
-            var wrapper = new TestableOutlookItemWrapper(dummy, mockEvents.Object, supportedTypes);            
-                        
+            var wrapper = new TestableOutlookItemWrapper(dummy, mockEvents.Object, supportedTypes);
+
             // Act
             System.Action act = () => wrapper.Close(OlInspectorClose.olDiscard);
 
@@ -388,128 +443,132 @@ namespace Gsync.Test.OutlookInterop.Item
 
         [TestMethod]
         public void Copy_Method_CallsUnderlying()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var copyObj = new object();
-            mock.Setup(m => m.Copy()).Returns(copyObj);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(copyObj, wrapper.Copy());
+            _itemMock.Setup(m => m.Copy()).Returns(copyObj);
+            LockMockObjects();            
+            Assert.AreEqual(copyObj, _wrapper.Copy());
         }
 
         [TestMethod]
         public void Delete_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Delete()).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.Delete();
-            mock.Verify(m => m.Delete(), Times.Once);
+            _itemMock.Setup(m => m.Delete()).Verifiable();
+            LockMockObjects();
+            _wrapper.Delete();
+            _itemMock.Verify(m => m.Delete(), Times.Once);
         }
 
         [TestMethod]
         public void Display_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Display(It.IsAny<object>())).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.Display(true);
-            mock.Verify(m => m.Display(true), Times.Once);
+            _itemMock.Setup(m => m.Display(It.IsAny<object>())).Verifiable();
+            LockMockObjects();
+            _wrapper.Display(true);
+            _itemMock.Verify(m => m.Display(true), Times.Once);
+        }
+
+        [TestMethod]
+        public void Display_CallsUnderlying_WithNullModal()
+        {
+            // Arrange
+            _itemMock.Setup(m => m.Display(null)).Verifiable();
+            LockMockObjects();
+
+            // Act
+            _wrapper.Display(null);
+
+            // Assert
+            _itemMock.Verify(m => m.Display(null), Times.Once);
         }
 
         [TestMethod]
         public void Move_Method_CallsUnderlying()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var folder = new Mock<MAPIFolder>().Object;
             var movedObj = new object();
-            mock.Setup(m => m.Move(folder)).Returns(movedObj);
-            var wrapper = CreateWrapper(mock);
-            Assert.AreEqual(movedObj, wrapper.Move(folder));
+            _itemMock.Setup(m => m.Move(folder)).Returns(movedObj);
+            LockMockObjects();
+            Assert.AreEqual(movedObj, _wrapper.Move(folder));
         }
 
         [TestMethod]
         public void PrintOut_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.PrintOut()).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.PrintOut();
-            mock.Verify(m => m.PrintOut(), Times.Once);
+            _itemMock.Setup(m => m.PrintOut()).Verifiable();
+            LockMockObjects();
+            _wrapper.PrintOut();
+            _itemMock.Verify(m => m.PrintOut(), Times.Once);
         }
 
         [TestMethod]
         public void Save_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Save()).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.Save();
-            mock.Verify(m => m.Save(), Times.Once);
+            _itemMock.Setup(m => m.Save()).Verifiable();
+            LockMockObjects();
+            _wrapper.Save();
+            _itemMock.Verify(m => m.Save(), Times.Once);
         }
 
         [TestMethod]
         public void SaveAs_Method_CallsUnderlying()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.SaveAs(It.IsAny<string>(), It.IsAny<object>())).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.SaveAs("path", "type");
-            mock.Verify(m => m.SaveAs("path", "type"), Times.Once);
+            _itemMock.Setup(m => m.SaveAs(It.IsAny<string>(), It.IsAny<object>())).Verifiable();
+            LockMockObjects();
+            _wrapper.SaveAs("path", "type");
+            _itemMock.Verify(m => m.SaveAs("path", "type"), Times.Once);
         }
 
         [TestMethod]
-        public void ShowCategoriesDialog_Method_CallsUnderlying()
+        public void SaveAs_CallsUnderlying_WithNullType()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.ShowCategoriesDialog()).Verifiable();
-            var wrapper = CreateWrapper(mock);
-            wrapper.ShowCategoriesDialog();
-            mock.Verify(m => m.ShowCategoriesDialog(), Times.Once);
+            // Arrange
+            _itemMock.Setup(m => m.SaveAs(It.IsAny<string>(), null)).Verifiable();
+            LockMockObjects();
+
+            // Act
+            _wrapper.SaveAs("path", null);
+
+            // Assert
+            _itemMock.Verify(m => m.SaveAs("path", null), Times.Once);
         }
 
         [TestMethod]
         [ExpectedException(typeof(COMException))]
         public void Property_AccessThrowsException_IsPropagated()
         {
-            var mock = CreateMailItemMock();
-            mock.Setup(m => m.Application).Throws(new COMException("fail!"));
-            var wrapper = CreateWrapper(mock);
-            var unused = wrapper.Application;
+            _itemMock.Setup(m => m.Application).Throws(new COMException("fail!"));
+            LockMockObjects();            
+            var unused = _wrapper.Application;
         }
 
         [TestMethod]
         [ExpectedException(typeof(COMException))]
         public void Property_SetThrowsException_IsPropagated()
         {
-            var mock = CreateMailItemMock();
-            mock.SetupSet(m => m.Body = It.IsAny<string>()).Throws(new COMException("fail!"));
-            var wrapper = CreateWrapper(mock);
-            wrapper.Body = "Should throw";
+            _itemMock.SetupSet(m => m.Body = It.IsAny<string>()).Throws(new COMException("fail!"));
+            LockMockObjects();
+            _wrapper.Body = "Should throw";
         }
 
         [TestMethod]
         public void IsComObjectFunc_ReturnsFalse_ForNull()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = CreateWrapper(mock);
-            Assert.IsFalse(wrapperProtectedIsComObjectFunc(wrapper, null));
+            var result = ProtectedIsComObjectFunc(null);            
+            Assert.IsFalse(result);
         }
 
         [TestMethod]
         public void IsComObjectFunc_ReturnsFalse_ForManagedObject()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = CreateWrapper(mock);
             var managedObj = new object();
-            Assert.IsFalse(wrapperProtectedIsComObjectFunc(wrapper, managedObj));
+            var result = ProtectedIsComObjectFunc(managedObj);
+            Assert.IsFalse(result);
         }
 
         [TestMethod]
         public void IsComObjectFunc_ReturnsTrue_ForComObject()
-        {
-            var mock = CreateMailItemMock();
-            var wrapper = CreateWrapper(mock);
-
+        {            
             // Use a real COM object (Scripting.Dictionary is available on most Windows systems)
             Type comType = Type.GetTypeFromProgID("Scripting.Dictionary");
             if (comType == null)
@@ -521,7 +580,8 @@ namespace Gsync.Test.OutlookInterop.Item
                 object comObj = Activator.CreateInstance(comType);
                 try
                 {
-                    Assert.IsTrue(wrapperProtectedIsComObjectFunc(wrapper, comObj));
+                    var result = ProtectedIsComObjectFunc(comObj);
+                    Assert.IsTrue(result);
                 }
                 finally
                 {
@@ -530,72 +590,101 @@ namespace Gsync.Test.OutlookInterop.Item
             }
         }
 
-        // Helper to access protected method
-        private bool wrapperProtectedIsComObjectFunc(OutlookItemWrapper wrapper, object obj)
+        [TestMethod]
+        public void AttachComEvents_DoesNothing_WhenComEventsIsNull()
         {
-            var method = typeof(OutlookItemWrapper).GetMethod("IsComObjectFunc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            return (bool)method.Invoke(wrapper, new[] { obj });
+            // Arrange
+            var wrapperType = typeof(OutlookItemWrapper);
+            var wrapper = (OutlookItemWrapper)Activator.CreateInstance(
+                wrapperType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { _itemMock.Object, null, ImmutableHashSet.Create(_itemMock.Object.GetType().Name) },
+                null
+            );
+            var comEventsField = wrapperType.GetField("_comEvents", BindingFlags.NonPublic | BindingFlags.Instance);
+            comEventsField.SetValue(wrapper, null);
+
+            // Act & Assert: Should not throw
+            var method = wrapperType.GetMethod("AttachComEvents", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(wrapper, null);
+        }
+
+        [TestMethod]
+        public void DetachComEvents_DoesNothing_WhenComEventsIsNull()
+        {
+            // Arrange
+            var wrapperType = typeof(OutlookItemWrapper);
+            var wrapper = (OutlookItemWrapper)Activator.CreateInstance(
+                wrapperType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { _itemMock.Object, null, ImmutableHashSet.Create(_itemMock.Object.GetType().Name) },
+                null
+            );
+            var comEventsField = wrapperType.GetField("_comEvents", BindingFlags.NonPublic | BindingFlags.Instance);
+            comEventsField.SetValue(wrapper, null);
+
+            // Act & Assert: Should not throw
+            var method = wrapperType.GetMethod("DetachComEvents", BindingFlags.NonPublic | BindingFlags.Instance);
+            method.Invoke(wrapper, null);
         }
 
         [TestMethod]
         public void OnAttachmentAdd_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
-            wrapper.AttachmentAdd += a =>
+            _wrapper.AttachmentAdd += a =>
             {
                 called = true;
                 Assert.AreEqual(attachment, a);
             };
 
-            wrapper.InvokeOnAttachmentAdd(attachment);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnAttachmentAdd(attachment);
             Assert.IsTrue(called);
         }
 
         [TestMethod]
         public void OnAttachmentRead_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
-            wrapper.AttachmentRead += a =>
+            _wrapper.AttachmentRead += a =>
             {
                 called = true;
                 Assert.AreEqual(attachment, a);
             };
 
-            wrapper.InvokeOnAttachmentRead(attachment);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnAttachmentRead(attachment);
             Assert.IsTrue(called);
         }
 
         [TestMethod]
         public void OnAttachmentRemove_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
             var attachment = new Mock<Attachment>().Object;
-            wrapper.AttachmentRemove += a =>
+            _wrapper.AttachmentRemove += a =>
             {
                 called = true;
                 Assert.AreEqual(attachment, a);
             };
 
-            wrapper.InvokeOnAttachmentRemove(attachment);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnAttachmentRemove(attachment);
             Assert.IsTrue(called);
         }
 
         [TestMethod]
         public void OnBeforeDelete_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
-            object item = new object();            
-            wrapper.BeforeDelete += (object i, ref bool c) =>
+            object item = new object();
+            _wrapper.BeforeDelete += (object i, ref bool c) =>
             {
                 called = true;
                 Assert.AreEqual(item, i);
@@ -603,25 +692,24 @@ namespace Gsync.Test.OutlookInterop.Item
             };
 
             bool cancelArg = false;
-            wrapper.InvokeOnBeforeDelete(item, ref cancelArg);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnBeforeDelete(item, ref cancelArg);
             Assert.IsTrue(called);
-            Assert.IsTrue(cancelArg);            
+            Assert.IsTrue(cancelArg);
         }
 
         [TestMethod]
         public void OnCloseEvent_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
-            wrapper.CloseEvent += (ref bool c) =>
+            _wrapper.CloseEvent += (ref bool c) =>
             {
                 called = true;
                 c = true;
             };
 
             bool cancel = false;
-            wrapper.InvokeOnCloseEvent(ref cancel);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnCloseEvent(ref cancel);
             Assert.IsTrue(called);
             Assert.IsTrue(cancel);
         }
@@ -629,17 +717,16 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void OnOpen_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
-            wrapper.Open += (ref bool c) =>
+            _wrapper.Open += (ref bool c) =>
             {
                 called = true;
                 c = true;
             };
 
             bool cancel = false;
-            wrapper.InvokeOnOpen(ref cancel);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnOpen(ref cancel);
             Assert.IsTrue(called);
             Assert.IsTrue(cancel);
         }
@@ -647,127 +734,610 @@ namespace Gsync.Test.OutlookInterop.Item
         [TestMethod]
         public void OnPropertyChange_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
             string propertyName = "TestProp";
-            wrapper.PropertyChange += name =>
+            _wrapper.PropertyChange += name =>
             {
                 called = true;
                 Assert.AreEqual(propertyName, name);
             };
 
-            wrapper.InvokeOnPropertyChange(propertyName);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnPropertyChange(propertyName);
             Assert.IsTrue(called);
         }
 
         [TestMethod]
         public void OnRead_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
-            wrapper.Read += () => called = true;
+            _wrapper.Read += () => called = true;
 
-            wrapper.InvokeOnRead();
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnRead();
             Assert.IsTrue(called);
         }
 
         [TestMethod]
         public void OnWrite_RaisesEvent()
         {
-            var mock = CreateMailItemMock();
-            var wrapper = new TestableOutlookItemWrapper(mock.Object);
+            LockMockObjects();
             bool called = false;
-            wrapper.Write += (ref bool c) =>
+            _wrapper.Write += (ref bool c) =>
             {
                 called = true;
                 c = true;
             };
 
             bool cancel = false;
-            wrapper.InvokeOnWrite(ref cancel);
+            (_wrapper as TestableOutlookItemWrapper).InvokeOnWrite(ref cancel);
             Assert.IsTrue(called);
             Assert.IsTrue(cancel);
-        }        
+        }
 
         [TestMethod]
         public void EqualityComparer_Default_IsIItemEqualityComparer()
-        {
-            var mock = CreateMailItemMock();
-            var wrapper = CreateWrapper(mock);
-            Assert.IsInstanceOfType(wrapper.EqualityComparer, typeof(IItemEqualityComparer));
+        {            
+            LockMockObjects();
+            Assert.IsInstanceOfType(_wrapper.EqualityComparer, typeof(IItemEqualityComparer));
         }
 
         [TestMethod]
         public void EqualityComparer_CanBeInjected_AndUsed()
         {
-            var mock = CreateMailItemMock();
+            LockMockObjects();
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
             customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(123);
 
-            var wrapper = new OutlookItemWrapper(mock.Object)
-            {
-                EqualityComparer = customComparer.Object
-            };
-
-            Assert.AreEqual(customComparer.Object, wrapper.EqualityComparer);
+            _wrapper.EqualityComparer = customComparer.Object;
+            Assert.AreEqual(customComparer.Object, _wrapper.EqualityComparer);
 
             // Should use the injected comparer
-            Assert.IsTrue(wrapper.Equals((IItem)null));
-            Assert.AreEqual(123, wrapper.GetHashCode());
+            Assert.IsTrue(_wrapper.Equals((IItem)null));
+            Assert.AreEqual(123, _wrapper.GetHashCode());
         }
 
         [TestMethod]
         public void EqualsIItem_UsesEqualityComparer()
         {
-            var mock = CreateMailItemMock();            
-            var otherMock = CreateMailItemMock();
+            LockMockObjects();
+            var otherMock = CreateIItemMock();
             var customComparer = new Mock<IEqualityComparer<IItem>>();
-            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);            
-            var wrapper = new OutlookItemWrapper(mock.Object)
-            {
-                EqualityComparer = customComparer.Object
-            };
-            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+            _wrapper.EqualityComparer = customComparer.Object;            
+            var otherTypes = ImmutableHashSet.Create(otherMock.Object.GetType().Name);
+            var otherWrapper = CreateWrapper(otherMock.Object, _events, otherTypes);
 
-            Assert.IsFalse(wrapper.Equals(otherWrapper));
+            Assert.IsFalse(_wrapper.Equals(otherWrapper));
             customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
         }
 
         [TestMethod]
         public void EqualsObject_UsesEqualityComparer()
         {
-            var mock = CreateMailItemMock();
-            var otherMock = CreateMailItemMock();
+            LockMockObjects();
+            var otherMock = CreateIItemMock();
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+            _wrapper.EqualityComparer = customComparer.Object;
+            var otherTypes = ImmutableHashSet.Create(otherMock.Object.GetType().Name);
+            var otherWrapper = CreateWrapper(otherMock.Object, _events, otherTypes);
 
-            var wrapper = new OutlookItemWrapper(mock.Object)
-            {
-                EqualityComparer = customComparer.Object
-            };
-            var otherWrapper = new OutlookItemWrapper(otherMock.Object);
-
-            Assert.IsTrue(wrapper.Equals((object)otherWrapper));
+            Assert.IsTrue(_wrapper.Equals((object)otherWrapper));
             customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Once);
         }
 
         [TestMethod]
         public void GetHashCode_UsesEqualityComparer()
-        {
-            var mock = CreateMailItemMock();
+        {            
             var customComparer = new Mock<IEqualityComparer<IItem>>();
             customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
+            LockMockObjects();
+            _wrapper.EqualityComparer = customComparer.Object;            
 
-            var wrapper = new OutlookItemWrapper(mock.Object)
-            {
-                EqualityComparer = customComparer.Object
-            };
-
-            Assert.AreEqual(42, wrapper.GetHashCode());
-            customComparer.Verify(c => c.GetHashCode(wrapper), Times.Once);
+            Assert.AreEqual(42, _wrapper.GetHashCode());
+            customComparer.Verify(c => c.GetHashCode(_wrapper), Times.Once);
         }
+
+        [TestMethod]
+        public void Actions_Property_ReturnsValue()
+        {            
+            var actions = new Mock<Actions>().Object;
+            _itemMock.Setup(m => m.Actions).Returns(actions);
+            LockMockObjects();            
+            Assert.AreEqual(actions, _wrapper.Actions);
+        }
+
+        [TestMethod]
+        public void ConversationIndex_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.ConversationIndex).Returns("conv-index");
+            LockMockObjects();
+            Assert.AreEqual("conv-index", _wrapper.ConversationIndex);
+        }
+
+        [TestMethod]
+        public void ConversationTopic_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.ConversationTopic).Returns("conv-topic");
+            LockMockObjects();
+            Assert.AreEqual("conv-topic", _wrapper.ConversationTopic);
+        }
+
+        [TestMethod]
+        public void FormDescription_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.FormDescription).Returns("form-desc");
+            LockMockObjects();
+            Assert.AreEqual("form-desc", _wrapper.FormDescription);
+        }
+
+        [TestMethod]
+        public void GetInspector_Property_ReturnsValue()
+        {            
+            var inspector = new object();
+            _itemMock.Setup(m => m.GetInspector).Returns(inspector);
+            LockMockObjects();
+            Assert.AreEqual(inspector, _wrapper.GetInspector);
+        }
+
+        [TestMethod]
+        public void MAPIOBJECT_Property_ReturnsValue()
+        {            
+            var mapiObj = new object();
+            _itemMock.Setup(m => m.MAPIOBJECT).Returns(mapiObj);
+            LockMockObjects();
+            Assert.AreEqual(mapiObj, _wrapper.MAPIOBJECT);
+        }
+
+        [TestMethod]
+        public void UserProperties_Property_ReturnsValue()
+        {            
+            var userProps = new object();
+            _itemMock.Setup(m => m.UserProperties).Returns(userProps);
+            LockMockObjects();
+            Assert.AreEqual(userProps, _wrapper.UserProperties);
+        }
+
+        [TestMethod]
+        public void AutoResolvedWinner_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.AutoResolvedWinner).Returns(true);
+            LockMockObjects();
+            Assert.IsTrue(_wrapper.AutoResolvedWinner);
+        }
+
+        [TestMethod]
+        public void Conflicts_Property_ReturnsValue()
+        {            
+            var conflicts = new Mock<Conflicts>().Object;
+            _itemMock.Setup(m => m.Conflicts).Returns(conflicts);
+            LockMockObjects();
+            Assert.AreEqual(conflicts, _wrapper.Conflicts);
+        }
+
+        [TestMethod]
+        public void DownloadState_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.DownloadState).Returns(OlDownloadState.olFullItem);
+            LockMockObjects();
+            Assert.AreEqual(OlDownloadState.olFullItem, _wrapper.DownloadState);
+        }
+
+        [TestMethod]
+        public void IsConflict_Property_ReturnsValue()
+        {
+            _itemMock.Setup(m => m.IsConflict).Returns(true);
+            LockMockObjects();
+            Assert.IsTrue(_wrapper.IsConflict);
+        }
+
+        [TestMethod]
+        public void Links_Property_ReturnsValue()
+        {            
+            var links = new Mock<Links>().Object;
+            _itemMock.Setup(m => m.Links).Returns(links);
+            LockMockObjects();
+            Assert.AreEqual(links, _wrapper.Links);
+        }
+
+        [TestMethod]
+        public void PropertyAccessor_Property_ReturnsValue()
+        {            
+            var accessor = new Mock<PropertyAccessor>().Object;
+            _itemMock.Setup(m => m.PropertyAccessor).Returns(accessor);
+            LockMockObjects();
+            Assert.AreEqual(accessor, _wrapper.PropertyAccessor);
+        }
+
+        [TestMethod]
+        public void GetRawHeaders_ReturnsHeaders_WhenPropertyAccessorReturnsString()
+        {
+            // Arrange
+            var expectedHeaders = "Header1: Value1\r\nHeader2: Value2";
+            var propertyAccessorMock = new Mock<PropertyAccessor>();
+            propertyAccessorMock
+                .Setup(pa => pa.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x007D001E"))
+                .Returns(expectedHeaders);
+
+            var dyn = new DynamicIItem();
+            dyn.Properties["PropertyAccessor"] = propertyAccessorMock.Object;
+
+            var wrapper = CreateWrapper(dyn, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+
+            // Act
+            var headers = wrapper.GetType()
+                .GetMethod("GetRawHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(wrapper, null);
+
+            // Assert
+            Assert.AreEqual(expectedHeaders, headers);
+        }
+
+        [TestMethod]
+        public void GetRawHeaders_ReturnsNull_WhenPropertyAccessorReturnsNull()
+        {
+            // Arrange
+            var propertyAccessorMock = new Mock<PropertyAccessor>();
+            propertyAccessorMock
+                .Setup(pa => pa.GetProperty(It.IsAny<string>()))
+                .Returns((string)null);
+
+            var dyn = new DynamicIItem();
+            dyn.Properties["PropertyAccessor"] = propertyAccessorMock.Object;
+
+            var wrapper = CreateWrapper(dyn, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+
+            // Act
+            var headers = wrapper.GetType()
+                .GetMethod("GetRawHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(wrapper, null);
+
+            // Assert
+            Assert.IsNull(headers);
+        }
+
+        [TestMethod]
+        public void GetRawHeaders_ReturnsNull_WhenExceptionIsThrown()
+        {
+            // Arrange
+            var propertyAccessorMock = new Mock<PropertyAccessor>();
+            propertyAccessorMock
+                .Setup(pa => pa.GetProperty(It.IsAny<string>()))
+                .Throws(new InvalidOperationException("Simulated exception"));
+            _itemMock.Setup(m => m.PropertyAccessor).Returns(propertyAccessorMock.Object);
+            LockMockObjects();
+            
+
+            // Act
+            var headers = _wrapper.GetType()
+                .GetMethod("GetRawHeaders", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(_wrapper, null);
+
+            // Assert
+            Assert.IsNull(headers);
+        }
+
+        [TestMethod]
+        public void GetMessageId_ParsesMessageId_FromNormalizedHeaders()
+        {
+            // Arrange
+            LockMockObjects();
+
+            // Simulate folded Message-ID header with extra whitespace
+            var rawNormalized = "From: test@example.com\r\nMessage-ID: <abc123@domain.com>\r\nTo: x@y.com";
+
+            // Inject into _rawHeadersNormalized
+            var normField = typeof(OutlookItemWrapper).GetField("_rawHeadersNormalized", BindingFlags.NonPublic | BindingFlags.Instance);
+            normField.SetValue(_wrapper, new Lazy<string>(() => rawNormalized));
+
+            var method = _wrapper.GetType().GetMethod("GetMessageId", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            // Act
+            var messageId = method.Invoke(_wrapper, null);
+            Console.WriteLine($"Expected Message-ID: abc123@domain.com");
+            Console.WriteLine($"Actual   Message-ID: {messageId}");
+
+            // Assert
+            Assert.AreEqual("abc123@domain.com", messageId);
+        }
+
+        [TestMethod]
+        public void GetMessageId_ParsesMessageId_FromNormalizedHeadersUnbracketed()
+        {
+            // Arrange
+            LockMockObjects();
+
+            // Simulate folded Message-ID header with extra whitespace
+            var rawNormalized = "From: test@example.com\r\nMessage-ID: abc123@domain.com\r\nTo: x@y.com";
+
+            // Inject into _rawHeadersNormalized
+            var normField = typeof(OutlookItemWrapper).GetField("_rawHeadersNormalized", BindingFlags.NonPublic | BindingFlags.Instance);
+            normField.SetValue(_wrapper, new Lazy<string>(() => rawNormalized));
+
+            var method = _wrapper.GetType().GetMethod("GetMessageId", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            // Act
+            var messageId = method.Invoke(_wrapper, null);
+            Console.WriteLine($"Expected Message-ID: abc123@domain.com");
+            Console.WriteLine($"Actual   Message-ID: {messageId}");
+
+            // Assert
+            Assert.AreEqual("abc123@domain.com", messageId);
+        }
+
+
+        [TestMethod]
+        public void GetMessageId_ReturnsNull_WhenNoMessageIdInHeaders()
+        {
+            // Arrange
+            var rawHeaders = "From: test@example.com\r\nTo: x@y.com";
+            var dyn = new DynamicIItem();
+            dyn.Properties["PropertyAccessor"] = null;
+
+            var wrapper = CreateWrapper(dyn, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+            var rawHeadersField = typeof(OutlookItemWrapper).GetField("_rawHeaders", BindingFlags.NonPublic | BindingFlags.Instance);
+            rawHeadersField.SetValue(wrapper, new Lazy<string>(() => rawHeaders));
+
+            var getMessageId = wrapper.GetType().GetMethod("GetMessageId", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            // Act
+            var messageId = getMessageId.Invoke(wrapper, null);
+
+            // Assert
+            Assert.IsNull(messageId);
+        }
+
+        [TestMethod]
+        public void GetMessageId_ReturnsNull_WhenBracketIsUnclosed()
+        {
+            LockMockObjects();
+            var malformed = "Message-ID: <abc@x.com";
+
+            var field = typeof(OutlookItemWrapper).GetField("_rawHeadersNormalized", BindingFlags.NonPublic | BindingFlags.Instance);
+            field.SetValue(_wrapper, new Lazy<string>(() => malformed));
+
+            var method = _wrapper.GetType().GetMethod("GetMessageId", BindingFlags.Instance | BindingFlags.NonPublic);
+            var result = method.Invoke(_wrapper, null);
+
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void GetMessageId_ReturnsNull_WhenBracketIsUnopened()
+        {
+            LockMockObjects();
+            var malformed = "Message-ID: abc@x.com>";
+
+            var field = typeof(OutlookItemWrapper).GetField("_rawHeadersNormalized", BindingFlags.NonPublic | BindingFlags.Instance);
+            field.SetValue(_wrapper, new Lazy<string>(() => malformed));
+
+            var method = _wrapper.GetType().GetMethod("GetMessageId", BindingFlags.Instance | BindingFlags.NonPublic);
+            var result = method.Invoke(_wrapper, null);
+
+            Assert.IsNull(result);
+        }
+
+
+
+        [TestMethod]
+        public void NormalizeRawHeaders_UnfoldsAndSanitizesCorrectly()
+        {
+            // Arrange
+            LockMockObjects();
+            var folded = "From: test@example.com\r\nMessage-ID: <abc123@\r\n domain.com>\r\nTo: x@y.com\r\nX-Noise:\x01\x02value";
+
+            // Inject into _rawHeaders
+            var rawField = typeof(OutlookItemWrapper).GetField("_rawHeaders", BindingFlags.NonPublic | BindingFlags.Instance);
+            rawField.SetValue(_wrapper, new Lazy<string>(() => folded));
+
+            var method = _wrapper.GetType().GetMethod("NormalizeRawHeaders", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            // Act
+            var normalized = (string)method.Invoke(_wrapper, null);
+
+            // Assert
+            string expected = "From: test@example.com\r\nMessage-ID: <abc123@ domain.com>\r\nTo: x@y.com\r\nX-Noise:value";
+            Assert.AreEqual(expected, normalized);
+        }
+
+        [TestMethod]
+        public void NormalizeRawHeaders_ReturnsNull_WhenHeadersAreWhitespace()
+        {
+            // Arrange
+            LockMockObjects();
+            var whitespaceHeaders = "   \r\n\t  ";
+            var rawHeadersField = typeof(OutlookItemWrapper).GetField("_rawHeaders", BindingFlags.NonPublic | BindingFlags.Instance);
+            rawHeadersField.SetValue(_wrapper, new Lazy<string>(() => whitespaceHeaders));
+
+            // Act
+            var method = _wrapper.GetType().GetMethod("NormalizeRawHeaders", BindingFlags.Instance | BindingFlags.NonPublic);
+            var result = method.Invoke(_wrapper, null);
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ReleaseComObject_CallsMarshalReleaseComObject_ForComObject()
+        {
+            // Arrange
+            Type comType = Type.GetTypeFromProgID("Scripting.Dictionary");
+            if (comType == null)
+            {
+                Assert.Inconclusive("Scripting.Dictionary COM type not available on this system.");
+                return;
+            }
+            object comObj = Activator.CreateInstance(comType);
+            var wrapper = CreateWrapper(_dynItem, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+
+            // Act & Assert
+            // Should not throw
+            try
+            {
+                var method = wrapper.GetType().GetMethod("ReleaseComObject", BindingFlags.Instance | BindingFlags.NonPublic);
+                method.Invoke(wrapper, new object[] { comObj });
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(comObj);
+            }
+        }
+
+        [TestMethod]
+        public void ReleaseComObject_DoesNothing_ForNull()
+        {
+            // Arrange
+            var wrapper = CreateWrapper(_dynItem, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+
+            // Act & Assert
+            var method = wrapper.GetType().GetMethod("ReleaseComObject", BindingFlags.Instance | BindingFlags.NonPublic);
+            // Should not throw
+            method.Invoke(wrapper, new object[] { null });
+        }
+
+        [TestMethod]
+        public void MessageId_PropertySetGet_ReturnsValue()
+        {
+            // Arrange
+            LockMockObjects();
+            //var wrapper = CreateWrapper(_dynItem, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+            var expectedGet = "msgid-123";
+            var expectedSet = "msgid-456";
+            var messageIdField = typeof(OutlookItemWrapper).GetField("_messageId", BindingFlags.NonPublic | BindingFlags.Instance);
+            messageIdField.SetValue(_wrapper, new Lazy<string>(() => expectedGet));
+
+            // Act
+            var actualGet = _wrapper.MessageId;
+            (_wrapper as TestableOutlookItemWrapper).MessageId = expectedSet;
+            var actualSet = _wrapper.MessageId;
+
+
+            // Assert
+            Console.WriteLine($"Expected Get: {expectedGet}");
+            Console.WriteLine($"Actual Get:   {actualGet}");
+            Console.WriteLine("");
+            Console.WriteLine($"Expected Set: {expectedSet}");
+            Console.WriteLine($"Actual Set:   {actualSet}");
+            Assert.AreEqual(expectedGet, actualGet, "Get method did not function properly");
+            Assert.AreEqual(expectedSet, actualSet, "Set method did not function properly");
+        }
+
+        [TestMethod]
+        public void RawHeaders_PropertySetGet_ReturnsValue()
+        {
+            // Arrange
+            //var wrapper = CreateWrapper(_dynItem, _itemMock.Object, _eventsMock.Object, ImmutableHashSet.Create("IItem"));
+            LockMockObjects();
+            var expectedGet = "Header1: Value1\r\nHeader2: Value2";
+            var expectedSet = "Header1: NewValue1\r\nHeader2: NewValue2";
+            var rawHeadersField = typeof(OutlookItemWrapper).GetField("_rawHeaders", BindingFlags.NonPublic | BindingFlags.Instance);
+            rawHeadersField.SetValue(_wrapper, new Lazy<string>(() => expectedGet));
+
+            // Act
+            var actualGet = _wrapper.RawHeaders;
+            (_wrapper as TestableOutlookItemWrapper).RawHeaders = expectedSet;
+            var actualSet = _wrapper.RawHeaders;
+
+            // Assert
+            Console.WriteLine($"Expected Get: {expectedGet}");
+            Console.WriteLine($"Actual Get:   {actualGet}");
+            Console.WriteLine("");
+            Console.WriteLine($"Expected Set: {expectedSet}");
+            Console.WriteLine($"Actual Set:   {actualSet}");
+            Assert.AreEqual(expectedGet, actualGet, "Get failed");
+            Assert.AreEqual(expectedSet, actualSet, "Set failed");
+        }
+
+        [TestMethod]
+        public void RawHeadersNormalized_PropertySetGet_ReturnsValue()
+        {
+            // Arrange            
+            LockMockObjects();
+            var expectedGet = "Header1: Value1\r\nHeader2: Value2";
+            var expectedSet = "Header1: NewValue1\r\nHeader2: NewValue2";
+            var rawHeadersField = typeof(OutlookItemWrapper).GetField("_rawHeadersNormalized", BindingFlags.NonPublic | BindingFlags.Instance);
+            rawHeadersField.SetValue(_wrapper, new Lazy<string>(() => expectedGet));
+
+            // Act
+            var actualGet = _wrapper.RawHeadersNormalized;
+            (_wrapper as TestableOutlookItemWrapper).RawHeadersNormalized = expectedSet;
+            var actualSet = _wrapper.RawHeadersNormalized;
+
+            // Assert
+            Console.WriteLine($"Expected Get: {expectedGet}");
+            Console.WriteLine($"Actual Get:   {actualGet}");
+            Console.WriteLine("");
+            Console.WriteLine($"Expected Set: {expectedSet}");
+            Console.WriteLine($"Actual Set:   {actualSet}");
+            Assert.AreEqual(expectedGet, actualGet, "Get failed");
+            Assert.AreEqual(expectedSet, actualSet, "Set failed");
+        }
+
+        [TestMethod]
+        public void InnerObject_Property_ReturnsUnderlyingItem()
+        {
+            // Arrange
+            LockMockObjects();
+
+            // Act & Assert
+            Assert.AreEqual(_item, _wrapper.InnerObject);
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsTrue_ForIdenticalReference()
+        {
+            // Arrange
+            LockMockObjects();
+            
+            // Act
+            var result = _wrapper.Equals((object)_wrapper);
+
+            // Assert
+            Assert.IsTrue(result);            
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsTrue_ForEquivalentObjects()
+        {
+            // Arrange
+            LockMockObjects();
+            var otherMock = CreateIItemMock();
+            var otherTypes = ImmutableHashSet.Create(otherMock.Object.GetType().Name);
+            var otherWrapper = CreateWrapper(otherMock.Object, _events, otherTypes);
+
+            // Use a custom comparer that returns true for equality
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+            _wrapper.EqualityComparer = customComparer.Object;
+
+            // Act
+            var result = _wrapper.Equals((object)otherWrapper);
+
+            // Assert
+            Assert.IsTrue(result);
+            customComparer.Verify(c => c.Equals(_wrapper, otherWrapper), Times.Once);
+        }
+
+        [TestMethod]
+        public void EqualsObject_ReturnsFalse_ForDifferentObjects()
+        {
+            // Arrange
+            LockMockObjects();
+            var otherObject = new object(); // Not an IItem
+
+            // Use a custom comparer that returns false for equality
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+            _wrapper.EqualityComparer = customComparer.Object;
+
+            // Act
+            var result = _wrapper.Equals((object)otherObject);
+
+            // Assert
+            Assert.IsFalse(result);
+            customComparer.Verify(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>()), Times.Never);
+        }        
     }
 }
