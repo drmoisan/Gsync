@@ -40,94 +40,82 @@ namespace Gsync.Utilities.HelperClasses.NewtonSoft
 
             var derivedInstance = (TDerived)Activator.CreateInstance(typeof(TDerived), true);
 
-            // Populate dictionary values
+            // 1. Populate dictionary values
             foreach (var kvp in CoDictionary)
-            {
                 derivedInstance.TryAdd(kvp.Key, kvp.Value);
-            }
 
             var derivedType = typeof(TDerived);
             var remainingType = RemainingObject.GetType();
 
-            // Step 1: Transfer Config via property if available
-            var configProp = derivedType.GetProperty("Config", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            // 2. Transfer Config explicitly
+            SetConfigIfPresent();
 
-            // remainingType is a dynamically emitted type, so we cannot rely on reflection to get the 
-            // property info unless we happened to emit it in the way that .NET would do it.
-            var configField = remainingType.GetField("_Config", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            var configValue = configField?.GetValue(RemainingObject);
-            
-            configProp?.SetValue(derivedInstance, configValue);
+            // 3. Transfer declared writable properties (excluding Config, ism, indexers)
+            var skipProperties = new HashSet<string> { "Config", "ism" };
+            SetWritableProperties();
 
-            // STEP 2: Transfer other properties that are declared on the derived type
-            var derivedProps = derivedType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            var derivedFields = derivedType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            
-            // Track which property names were set and their status (true = property is non-default after set)
-            var propertiesSet = new Dictionary<string, bool>();
-            // Track which fields were set via properties to avoid overwriting them in Step 3
-            var fieldsSetByProperties = new HashSet<string>();
-            var before = SnapshotFields(derivedInstance, derivedFields);
+            // 4. Take a snapshot of field values after property assignment
+            var fieldsAfterProps = SnapshotFieldValues(derivedInstance);
 
-            foreach (var prop in derivedProps)
-            {
-                if (prop.Name == "Config" || prop.Name == "ism" || !prop.CanWrite) continue;
-                if (prop.GetIndexParameters().Length > 0) continue;
-
-                var sourceProp = remainingType.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (sourceProp?.CanRead == true && sourceProp.GetIndexParameters().Length == 0)
-                {
-                    var value = sourceProp.GetValue(RemainingObject);
-                    prop.SetValue(derivedInstance, value);
-
-                    // Try to get the field that backs this property, if any
-                    var backingField = derivedType.GetField($"_{prop.Name}", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                                    ?? derivedType.GetField($"<{prop.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                    if (backingField != null)
-                        fieldsSetByProperties.Add(backingField.Name);                    
-                }
-            }
-
-            var after = SnapshotFields(derivedInstance, derivedFields);
-            foreach (var field in derivedFields)
-            {
-                var oldValue = before[field.Name];
-                var newValue = after[field.Name];
-                if (!object.Equals(oldValue, newValue))
-                    fieldsSetByProperties.Add(field.Name);
-            }
-
-            // STEP 3: Transfer additional fields if they exist on both types            
-            var sourceFields = remainingType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            foreach (var srcField in sourceFields)
-            {
-                if (srcField.Name == "ism" || srcField.Name == "_ism") continue;
-                if (fieldsSetByProperties.Contains(srcField.Name))
-                {
-                    Console.WriteLine($"SKIP Step 3 field '{srcField.Name}' (set by property in Step 2)");
-                    continue; // Don't overwrite property values set in Step 2
-                }
-
-                var destField = derivedFields.FirstOrDefault(f => f.Name == srcField.Name);
-                if (destField != null)
-                {                    
-                    var value = srcField.GetValue(RemainingObject);
-                    Console.WriteLine($"SET field '{srcField.Name}' to '{value ?? "null"}'");
-                    destField.SetValue(derivedInstance, value);
-                }
-            }
+            // 5. Assign remaining fields, skipping those modified by properties
+            AssignFields(fieldsAfterProps);
 
             return derivedInstance;
+
+            // --- Local function definitions below ---
+
+            void SetConfigIfPresent()
+            {
+                var configProp = derivedType.GetProperty("Config", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                var configField = remainingType.GetField("_Config", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                var configValue = configField?.GetValue(RemainingObject);
+                configProp?.SetValue(derivedInstance, configValue);
+            }
+
+            void SetWritableProperties()
+            {
+                foreach (var prop in derivedType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (skipProperties.Contains(prop.Name) || !prop.CanWrite || prop.GetIndexParameters().Length > 0)
+                        continue;
+
+                    var sourceProp = remainingType.GetProperty(prop.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (sourceProp?.CanRead == true && sourceProp.GetIndexParameters().Length == 0)
+                    {
+                        var value = sourceProp.GetValue(RemainingObject);
+                        prop.SetValue(derivedInstance, value);
+                    }
+                }
+            }
+
+            Dictionary<string, object> SnapshotFieldValues(object obj)
+            {
+                return derivedType
+                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .ToDictionary(f => f.Name, f => f.GetValue(obj));
+            }
+
+            void AssignFields(Dictionary<string, object> fieldsSetByProps)
+            {
+                var derivedFields = derivedType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var sourceFields = remainingType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                foreach (var srcField in sourceFields)
+                {
+                    // If property assignment set this field (by name and value), skip it
+                    if (fieldsSetByProps.ContainsKey(srcField.Name))
+                        continue;
+
+                    var destField = derivedFields.FirstOrDefault(f => f.Name == srcField.Name);
+                    if (destField != null)
+                    {
+                        var value = srcField.GetValue(RemainingObject);
+                        destField.SetValue(derivedInstance, value);
+                    }
+                }
+            }
         }
 
-        Dictionary<string, object> SnapshotFields(object obj, IEnumerable<FieldInfo> fields)
-        {
-            var dict = new Dictionary<string, object>();
-            foreach (var field in fields)
-                dict[field.Name] = field.GetValue(obj);
-            return dict;
-        }
 
         public WrapperScoDictionary<TDerived, TKey, TValue> ToComposition(TDerived derivedInstance)
         {
