@@ -1,4 +1,6 @@
-﻿using Microsoft.Office.Tools;
+﻿using Gsync.Utilities.HelperClasses.NewtonSoft;
+using Gsync.Utilities.Interfaces;
+using Microsoft.Office.Tools;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -6,12 +8,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
-using Gsync.Utilities.Interfaces;
-using Gsync.Utilities.HelperClasses.NewtonSoft;
 
 
 namespace Gsync.Utilities.ReusableTypes
@@ -42,9 +43,21 @@ namespace Gsync.Utilities.ReusableTypes
         #region ISmartSerializable
 
         [JsonProperty]
-        public ISmartSerializableConfig Config { get => ism.Config; set => ism.Config = value; }
+        public ISmartSerializableConfig Config 
+        { 
+            get => ism?.Config;
+            set 
+            { 
+                if (ism is null)
+                {
+                    ism = new SmartSerializable<ScoDictionaryNew<TKey, TValue>>(this);
+                    logger.Debug("Tried to set Config on a null ism, initializing it.");
+                }
+                ism.Config = value; 
+            }
+        }
 
-        [JsonProperty]
+        [JsonIgnore]
         protected virtual ISmartSerializable<ScoDictionaryNew<TKey, TValue>> ism { get; set; }
 
         public void Serialize() => ism.Serialize();
@@ -71,6 +84,13 @@ namespace Gsync.Utilities.ReusableTypes
         async Task<ScoDictionaryNew<TKey, TValue>> ISmartSerializable<ScoDictionaryNew<TKey, TValue>>.DeserializeAsync<U>(
             ISmartSerializableLoader<U> config, bool askUserOnError, Func<ScoDictionaryNew<TKey, TValue>> altLoader) =>
             await ism.DeserializeAsync(config, askUserOnError, altLoader);
+
+        //[OnDeserialized]
+        //internal void OnDeserializedMethod(StreamingContext context)
+        //{
+        //    if (ism == null)
+        //        ism = new SmartSerializable<ScoDictionaryNew<TKey, TValue>>(this);
+        //}
 
         #endregion ISmartSerializable
 

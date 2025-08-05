@@ -1,10 +1,11 @@
 ﻿
+using Gsync.Utilities.ReusableTypes;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
-using System.Text;
 using System.Runtime;
-using Gsync.Utilities.ReusableTypes;
+using System.Text;
 
 namespace Gsync.Utilities.HelperClasses.NewtonSoft
 {
@@ -14,10 +15,29 @@ namespace Gsync.Utilities.HelperClasses.NewtonSoft
 
         public override TDerived ReadJson(JsonReader reader, Type typeToConvert, TDerived existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var wrapper = serializer.Deserialize(reader, typeof(WrapperScoDictionary<TDerived, TKey, TValue>)) as WrapperScoDictionary<TDerived, TKey, TValue>;
-            return wrapper?.ToDerived();            
+            // First deserialize into JObject so we can control RemainingObject later
+            var jObj = JObject.Load(reader);
+
+            // Manually extract and deserialize CoDictionary and RemainingObject
+            var coDict = jObj["CoDictionary"]?.ToObject<ConcurrentObservableDictionary<TKey, TValue>>(serializer);
+            var remainingToken = jObj["RemainingObject"];
+
+            var wrapper = new WrapperScoDictionary<TDerived, TKey, TValue>();
+            wrapper.CoDictionary = coDict;
+
+            // Dynamically compile the expected type
+            Type dynamicType = wrapper.CompileType();
+
+            // Deserialize RemainingObject into expected type
+            wrapper.RemainingObject = remainingToken?.ToObject(dynamicType, serializer);
+
+            // Final step
+            return wrapper.ToDerived();
+
+            //var wrapper = serializer.Deserialize(reader, typeof(WrapperScoDictionary<TDerived, TKey, TValue>)) as WrapperScoDictionary<TDerived, TKey, TValue>;
+            //return wrapper?.ToDerived();            
         }
-                
+
         public override void WriteJson(JsonWriter writer, TDerived value, JsonSerializer serializer)
         {
             var wrapper = new WrapperScoDictionary<TDerived, TKey, TValue>().ToComposition(value);

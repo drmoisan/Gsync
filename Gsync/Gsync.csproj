@@ -174,6 +174,7 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="GmailLink\GmailStoreLocator.cs" />
     <Compile Include="OutlookInterop\Folder\FolderMinimalWrapper.cs" />
     <Compile Include="AppGlobals\AppFileSystemFolderPaths.cs" />
     <Compile Include="AppGlobals\AppGlobals.cs" />
@@ -190,12 +191,14 @@
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperLoose.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemType.cs" />
     <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapper.cs" />
+    <Compile Include="Utilities\GTD\ProgramData.cs" />
     <Compile Include="Utilities\HelperClasses\DefaultDirectory.cs" />
     <Compile Include="Utilities\HelperClasses\DefaultEnvironment.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\MonoExtension.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\NLogTraceWriter.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverter.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\WrapperScoDictionary.cs" />
+    <Compile Include="Utilities\GTD\ProjectElement.cs" />
     <Compile Include="Utilities\Interfaces\IGTD\IFlagTranslator.cs" />
     <Compile Include="Utilities\Interfaces\IGTD\IIDList.cs" />
     <Compile Include="Utilities\Interfaces\IGTD\ITaskLegacy.cs" />
@@ -419,6 +422,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
