@@ -83,7 +83,8 @@
     <Compile Include="Utilities\GTD\ProgramDataTests.cs" />
     <Compile Include="Utilities\GTD\ProjectElementTests.cs" />
     <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
-    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverterTests.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverterIntegrationTests.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverterUnitTests.cs" />
     <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Dictionary\ConcurrentObservableDictionaryTests.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\FakeFileSystem.cs" />
     <Compile Include="Utilities\ReusableTypes\SmartSerializable\Old\DummySerializable.cs" />

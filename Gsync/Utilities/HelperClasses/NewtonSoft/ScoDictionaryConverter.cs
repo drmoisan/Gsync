@@ -1,4 +1,4 @@
-﻿
+﻿using Gsync.Utilities.Extensions;
 using Gsync.Utilities.ReusableTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -60,16 +60,54 @@ namespace Gsync.Utilities.HelperClasses.NewtonSoft
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            // Create the generic type WrapperScoDictionary<TDerived, TKey, TValue> at runtime
+            var jObj = JObject.Load(reader);
             Type[] genericArguments = objectType.GetScoDictionaryNewGenerics();
             Type wrapperType = typeof(WrapperScoDictionary<,,>).MakeGenericType(objectType, genericArguments[0], genericArguments[1]);
-            var wrapper = serializer.Deserialize(reader, wrapperType);
-            return wrapperType.GetMethod("ToDerived", [])?.Invoke(wrapper, null);
-            
+
+            var coDict = jObj["CoDictionary"]?.ToObject(
+                typeof(ConcurrentObservableDictionary<,>).MakeGenericType(genericArguments[0], genericArguments[1]), serializer);
+            var remainingToken = jObj["RemainingObject"];
+
+            var wrapper = Activator.CreateInstance(wrapperType);
+
+            // Set CoDictionary with robust reflection assignment
+            var coDictProp = wrapperType.GetProperty("CoDictionary");
+            if (coDict != null && coDictProp != null)
+            {
+                if (coDictProp.PropertyType.IsAssignableFrom(coDict.GetType()))
+                {
+                    coDictProp.SetValue(wrapper, coDict);
+                }
+                else
+                {
+                    var expectedDict = Activator.CreateInstance(coDictProp.PropertyType);
+                    var addMethod = coDictProp.PropertyType.GetMethod("TryAdd");
+                    foreach (dynamic kv in (System.Collections.IEnumerable)coDict)
+                    {
+                        addMethod.Invoke(expectedDict, new object[] { kv.Key, kv.Value });
+                    }
+                    coDictProp.SetValue(wrapper, expectedDict);
+                }
+            }
+
+            // Use reflection for CompileType, RemainingObject, ToDerived
+            var compileTypeMethod = wrapperType.GetMethod("CompileType");
+            Type dynamicType = (Type)compileTypeMethod.Invoke(wrapper, null);
+
+            var remainingObjectProp = wrapperType.GetProperty("RemainingObject");
+            remainingObjectProp.SetValue(wrapper, remainingToken?.ToObject(dynamicType, serializer));
+
+            var toDerivedMethod = wrapperType.GetMethod("ToDerived", Type.EmptyTypes);
+            return toDerivedMethod.Invoke(wrapper, null);
         }
+
+
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
+            serializer.ThrowIfNull();
+            writer.ThrowIfNull();
+            value.ThrowIfNull();
             Type valueType = value.GetType();
             Type[] genericArguments = valueType.GetScoDictionaryNewGenerics();
             //Type[] genericArguments = valueType.GetGenericArguments();

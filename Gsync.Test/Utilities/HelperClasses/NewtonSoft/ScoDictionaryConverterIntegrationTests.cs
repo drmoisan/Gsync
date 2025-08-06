@@ -11,7 +11,7 @@ using System;
 namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
 {
     [TestClass]
-    public class ScoDictionaryConverterTests
+    public class ScoDictionaryConverterIntegrationTests
     {
         private MockRepository mockRepository;
         private Mock<Microsoft.Office.Interop.Outlook.Application> mockApplication;
@@ -84,7 +84,7 @@ namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
 
             public TestDerived2 Init(IApplicationGlobals globals)
             {
-                Globals = new Mock<IApplicationGlobals>().Object;
+                Globals = globals;
                 AdditionalField2 = 42;
                 AdditionalField3 = "Test3";
                 this.TryAdd("key1", 1);
@@ -140,29 +140,6 @@ namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
 
         }
 
-        //[TestMethod]
-        //public void ReadJson_StateUnderTest_ExpectedBehavior()
-        //{
-        //    // Arrange
-        //    var scoDictionaryConverter = this.CreateScoDictionaryConverter();
-        //    JsonReader reader = null;
-        //    Type typeToConvert = null;
-        //    TDerived existingValue = null;
-        //    bool hasExistingValue = false;
-        //    JsonSerializer serializer = null;
-
-        //    // Act
-        //    var result = scoDictionaryConverter.ReadJson(
-        //        reader,
-        //        typeToConvert,
-        //        existingValue,
-        //        hasExistingValue,
-        //        serializer);
-
-        //    // Assert
-        //    Assert.Fail();
-        //    this.mockRepository.VerifyAll();
-        //}
 
         [TestMethod]
         public void TypedConverter_IntegrationTest_SerializeAndDeserialize()
@@ -214,14 +191,7 @@ namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
             // Act
             var json = expected.SerializeToString();
             Console.WriteLine(json);
-
-            // Sequential actions to do without custom converter
-            // var wrap = JsonConvert.DeserializeObject<WrapperScoDictionary<TestDerived, string, int>>(json, settings);
-            // var actual = wrap.ToDerived();
-
-            // Direct action with custom converter
-            //var actual = JsonConvert.DeserializeObject<TestDerived>(json, settings);
-
+                        
             // Static class deserialization with custom converter
             var settings = TestDerived.GetJsonSettings(globals);
             settings.Converters.Add(new ScoDictionaryConverter());
@@ -247,14 +217,7 @@ namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
             // Act
             var json = expected.SerializeToString();
             Console.WriteLine(json);
-
-            // Sequential actions to do without custom converter
-            // var wrap = JsonConvert.DeserializeObject<WrapperScoDictionary<TestDerived, string, int>>(json, settings);
-            // var actual = wrap.ToDerived();
-
-            // Direct action with custom converter
-            //var actual = JsonConvert.DeserializeObject<TestDerived>(json, settings);
-
+                        
             // Static class deserialization with custom converter
             var settings = TestDerived2.GetJsonSettings(globals);
             settings.Converters.Add(new ScoDictionaryConverter());
@@ -272,22 +235,7 @@ namespace Gsync.Test.Utilities.HelperClasses.NewtonSoft
 
         }
 
-        [TestMethod]
-        public void WriteJson_StateUnderTest_ExpectedBehavior()
-        {
-            // Arrange
-            var expected = new TestDerived().Init(globals);
-
-            //// Act
-            //scoDictionaryConverter.WriteJson(
-            //    writer,
-            //    value,
-            //    serializer);
-
-            //// Assert
-            Assert.Fail();
-            //this.mockRepository.VerifyAll();
-        }
+        
 
     }
 }
