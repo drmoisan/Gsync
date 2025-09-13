@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gsync", "Gsync\Gsync.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gsync.Test", "Gsync.Test\Gsync.Test.csproj", "{B7FEF13D-3490-47A8-884B-D922BF5353DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SVGControl", "SVGControl\SVGControl.csproj", "{D8C1FC62-03E7-4662-A40F-33A3E27ACCBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7FEF13D-3490-47A8-884B-D922BF5353DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8C1FC62-03E7-4662-A40F-33A3E27ACCBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8C1FC62-03E7-4662-A40F-33A3E27ACCBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8C1FC62-03E7-4662-A40F-33A3E27ACCBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8C1FC62-03E7-4662-A40F-33A3E27ACCBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

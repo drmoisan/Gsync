@@ -1,7 +1,15 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Gsync.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="FileName_EmailSessionTmp" Type="System.String" Scope="User">
+      <Value Profile="(Default)">GsycEmailSessionTmp.json</Value>
+    </Setting>
+    <Setting Name="FileName_EmailSession" Type="System.String" Scope="User">
+      <Value Profile="(Default)">GsycEmailSession.json</Value>
+    </Setting>
+    <Setting Name="FileName_EmailInfoStaging" Type="System.String" Scope="User">
+      <Value Profile="(Default)">GsycInfoStaging.json</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

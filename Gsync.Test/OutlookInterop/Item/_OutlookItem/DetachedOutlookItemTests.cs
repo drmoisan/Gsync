@@ -1,0 +1,312 @@
+﻿using Gsync.OutlookInterop.Item;
+using Gsync.OutlookInterop.Interfaces.Items;
+using Microsoft.Office.Interop.Outlook;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+
+namespace Gsync.Test.OutlookInterop.Item
+{
+    [TestClass]
+    public class DetachedOutlookItemTests
+    {
+        private Mock<IItem> CreateMockItem()
+        {
+            var mock = new Mock<IItem>();
+            mock.SetupAllProperties();
+            mock.SetupGet(m => m.BillingInformation).Returns("BillInfo");
+            mock.SetupGet(m => m.Body).Returns("BodyValue");
+            mock.SetupGet(m => m.Categories).Returns("Cats");
+            mock.SetupGet(m => m.Class).Returns(OlObjectClass.olMail);
+            mock.SetupGet(m => m.Companies).Returns("MyCo");
+            var now = DateTime.Now;
+            mock.SetupGet(m => m.CreationTime).Returns(now);
+            mock.SetupGet(m => m.EntryID).Returns("itemEntryId");
+            mock.SetupGet(m => m.Importance).Returns(OlImportance.olImportanceHigh);
+            mock.SetupGet(m => m.LastModificationTime).Returns(now);
+            mock.SetupGet(m => m.MessageClass).Returns("IPM.Note");
+            mock.SetupGet(m => m.Mileage).Returns("100mi");
+            mock.SetupGet(m => m.NoAging).Returns(true);
+            mock.SetupGet(m => m.OutlookInternalVersion).Returns(42);
+            mock.SetupGet(m => m.OutlookVersion).Returns("16.0");
+            mock.SetupGet(m => m.Saved).Returns(true);
+            mock.SetupGet(m => m.Sensitivity).Returns(OlSensitivity.olPrivate);
+            mock.SetupGet(m => m.Size).Returns(1234);
+            mock.SetupGet(m => m.Subject).Returns("Test Subject");
+            mock.SetupGet(m => m.UnRead).Returns(true);
+            
+            // Parent as MAPIFolder
+            var folderMock = new Mock<MAPIFolder>();
+            folderMock.SetupGet(f => f.StoreID).Returns("storeId123");
+            folderMock.SetupGet(f => f.EntryID).Returns("folderEntryId456");
+            mock.SetupGet(m => m.Parent).Returns(folderMock.Object);
+
+            return mock;
+        }
+
+        [TestMethod]
+        public void Constructor_Parameterless_NotNull()
+        {
+            var detached = new DetachedOutlookItem();
+            Assert.IsNotNull(detached);
+        }
+
+        [TestMethod]
+        public void Constructor_CopiesValueProperties()
+        {
+            var mock = CreateMockItem().Object;
+            var detached = new DetachedOutlookItem(mock);
+
+            Assert.AreEqual(mock.BillingInformation, detached.BillingInformation);
+            Assert.AreEqual(mock.Body, detached.Body);
+            Assert.AreEqual(mock.Categories, detached.Categories);
+            Assert.AreEqual(mock.Class, detached.Class);
+            Assert.AreEqual(mock.Companies, detached.Companies);
+            Assert.AreEqual(mock.ConversationID, detached.ConversationID);
+            Assert.AreEqual(mock.CreationTime, detached.CreationTime);
+            Assert.AreEqual(mock.EntryID, detached.EntryID);            
+            Assert.AreEqual(mock.Importance, detached.Importance);
+            Assert.AreEqual(mock.LastModificationTime, detached.LastModificationTime);
+            Assert.AreEqual(mock.MessageClass, detached.MessageClass);
+            Assert.AreEqual(mock.Mileage, detached.Mileage);
+            Assert.AreEqual(mock.NoAging, detached.NoAging);
+            Assert.AreEqual(mock.OutlookInternalVersion, detached.OutlookInternalVersion);
+            Assert.AreEqual(mock.OutlookVersion, detached.OutlookVersion);
+            Assert.AreEqual(mock.Saved, detached.Saved);                        
+            Assert.AreEqual(mock.Sensitivity, detached.Sensitivity);
+            Assert.AreEqual(mock.Size, detached.Size);
+            Assert.AreEqual(mock.Subject, detached.Subject);
+            Assert.AreEqual(mock.UnRead, detached.UnRead);
+            Assert.AreEqual((mock.Parent as MAPIFolder).StoreID, detached.StoreID);
+            Assert.AreEqual((mock.Parent as MAPIFolder).EntryID, detached.ParentFolderEntryID);
+        }
+
+        [TestMethod]
+        public void Constructor_WhenItemIsNull_ThrowsArgumentNullException()
+        {
+            Assert.ThrowsException<ArgumentNullException>(() => new DetachedOutlookItem(null));
+        }
+
+        [TestMethod]
+        public void ComProperties_AreAlwaysNull()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            Assert.IsNull(detached.Application);
+            Assert.IsNull(detached.Attachments);
+            Assert.IsNull(detached.ItemProperties);
+            Assert.IsNull(detached.Session);
+            Assert.IsNull(detached.InnerObject);
+            Assert.IsNull(detached.Parent);
+        }
+
+        [TestMethod]
+        public void Methods_Throw_NotSupportedException()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            Assert.ThrowsException<NotSupportedException>(() => detached.Close(OlInspectorClose.olSave));
+            Assert.ThrowsException<NotSupportedException>(() => detached.Copy());
+            Assert.ThrowsException<NotSupportedException>(() => detached.Delete());
+            Assert.ThrowsException<NotSupportedException>(() => detached.Display());
+            Assert.ThrowsException<NotSupportedException>(() => detached.Move(null));
+            Assert.ThrowsException<NotSupportedException>(() => detached.PrintOut());
+            Assert.ThrowsException<NotSupportedException>(() => detached.Save());
+            Assert.ThrowsException<NotSupportedException>(() => detached.SaveAs("x"));            
+        }
+
+        [TestMethod]
+        public void Events_SubscribeAndUnsubscribe_NoError()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+
+            IItem.AttachmentAddEventHandler attachmentAddHandler = (Attachment a) => { };
+            IItem.AttachmentReadEventHandler attachmentReadHandler = (Attachment a) => { };
+            IItem.AttachmentRemoveEventHandler attachmentRemoveHandler = (Attachment a) => { };
+            IItem.BeforeDeleteEventHandler beforeDeleteHandler = (object obj, ref bool c) => { };
+            IItem.CloseEventHandler closeEventHandler = (ref bool c) => { };
+            IItem.OpenEventHandler openEventHandler = (ref bool c) => { };
+            IItem.PropertyChangeEventHandler propertyChangeHandler = (string s) => { };
+            IItem.ReadEventHandler readHandler = () => { };
+            IItem.WriteEventHandler writeEventHandler = (ref bool c) => { };
+
+            // Subscribe and unsubscribe each event; should not throw
+            detached.AttachmentAdd += attachmentAddHandler;
+            detached.AttachmentAdd -= attachmentAddHandler;
+
+            detached.AttachmentRead += attachmentReadHandler;
+            detached.AttachmentRead -= attachmentReadHandler;
+
+            detached.AttachmentRemove += attachmentRemoveHandler;
+            detached.AttachmentRemove -= attachmentRemoveHandler;
+
+            detached.BeforeDelete += beforeDeleteHandler;
+            detached.BeforeDelete -= beforeDeleteHandler;
+
+            detached.CloseEvent += closeEventHandler;
+            detached.CloseEvent -= closeEventHandler;
+
+            detached.Open += openEventHandler;
+            detached.Open -= openEventHandler;
+
+            detached.PropertyChange += propertyChangeHandler;
+            detached.PropertyChange -= propertyChangeHandler;
+
+            detached.Read += readHandler;
+            detached.Read -= readHandler;
+
+            detached.Write += writeEventHandler;
+            detached.Write -= writeEventHandler;
+        }
+
+        [TestMethod]
+        public void Serialization_IgnoresComReferences()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            string json = JsonConvert.SerializeObject(detached);
+            Assert.IsFalse(json.Contains("Application"));
+            Assert.IsFalse(json.Contains("Attachments"));
+            Assert.IsFalse(json.Contains("ItemProperties"));
+            Assert.IsFalse(json.Contains("Session"));
+            Assert.IsFalse(json.Contains("InnerObject"));
+            Assert.IsFalse(json.Contains("\"Parent\""));
+            Assert.IsTrue(json.Contains("BillingInformation")); // At least one value property
+        }
+
+        [TestMethod]
+        public void Reattach_Throws_OnNullApplication()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            Assert.ThrowsException<ArgumentNullException>(() => detached.Reattach(null));
+        }
+
+        [TestMethod]
+        public void Reattach_Throws_OnMissingEntryIDOrStoreID()
+        {
+            var mock = CreateMockItem();
+            mock.SetupGet(m => m.EntryID).Returns((string)null);
+            var detached = new DetachedOutlookItem(mock.Object);
+            detached.StoreID = null;
+            Assert.ThrowsException<InvalidOperationException>(() => detached.Reattach(new Mock<Application>().Object));
+        }
+
+        [TestMethod]
+        public void Reattach_Throws_WhenStoreNotFound()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var appMock = new Mock<Application>();
+            var nsMock = new Mock<NameSpace>();
+            appMock.Setup(a => a.Session).Returns(nsMock.Object);
+            // Empty Stores collection
+            var storesMock = new Mock<Stores>();
+            storesMock.Setup(s => s.GetEnumerator()).Returns((System.Collections.IEnumerator)(new Store[0]).GetEnumerator());
+            nsMock.Setup(n => n.Stores).Returns(storesMock.Object);
+            Assert.ThrowsException<InvalidOperationException>(() => detached.Reattach(appMock.Object));
+        }
+
+        [TestMethod]
+        public void Reattach_Throws_WhenItemNotFound()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+
+            var appMock = new Mock<Application>();
+            var nsMock = new Mock<NameSpace>();
+            appMock.Setup(a => a.Session).Returns(nsMock.Object);
+
+            var storeMock = new Mock<Store>();
+            storeMock.SetupGet(s => s.StoreID).Returns(detached.StoreID);
+            var storesMock = new Mock<Stores>();
+            storesMock.Setup(s => s.GetEnumerator()).Returns((new[] { storeMock.Object }).GetEnumerator());
+            nsMock.Setup(n => n.Stores).Returns(storesMock.Object);
+
+            nsMock.Setup(n => n.GetItemFromID(detached.EntryID, detached.StoreID)).Returns((object)null);
+            Assert.ThrowsException<InvalidOperationException>(() => detached.Reattach(appMock.Object));
+        }
+
+        [TestMethod]
+        public void Reattach_ReturnsWrapper_WhenFound()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+
+            var appMock = new Mock<Application>();
+            var nsMock = new Mock<NameSpace>();
+            appMock.Setup(a => a.Session).Returns(nsMock.Object);
+
+            var storeMock = new Mock<Store>();
+            storeMock.SetupGet(s => s.StoreID).Returns(detached.StoreID);
+            var storesMock = new Mock<Stores>();
+            storesMock.Setup(s => s.GetEnumerator()).Returns((new[] { storeMock.Object }).GetEnumerator());
+            nsMock.Setup(n => n.Stores).Returns(storesMock.Object);
+
+            var mailItemMock = new Mock<MailItem>().Object;
+            nsMock.Setup(n => n.GetItemFromID(detached.EntryID, detached.StoreID)).Returns(mailItemMock);
+
+            var wrapper = detached.Reattach(appMock.Object);
+            Assert.IsNotNull(wrapper);
+            Assert.AreSame(mailItemMock, wrapper.InnerObject);
+        }
+
+        [TestMethod]
+        public void EqualityComparer_Default_IsIItemEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem();
+            Assert.IsInstanceOfType(detached.EqualityComparer, typeof(IItemEqualityComparer));
+        }
+
+        [TestMethod]
+        public void EqualityComparer_CanBeInjected_AndUsed()
+        {
+            var detached = new DetachedOutlookItem();
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(123);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.AreEqual(customComparer.Object, detached.EqualityComparer);
+            Assert.IsTrue(detached.Equals((IItem)null));
+            Assert.AreEqual(123, detached.GetHashCode());
+        }
+
+        [TestMethod]
+        public void EqualsIItem_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var other = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(false);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.IsFalse(detached.Equals((IItem)other));
+            customComparer.Verify(c => c.Equals(detached, other), Times.Once);
+        }
+
+        [TestMethod]
+        public void EqualsObject_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var other = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.Equals(It.IsAny<IItem>(), It.IsAny<IItem>())).Returns(true);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.IsTrue(detached.Equals((object)other));
+            customComparer.Verify(c => c.Equals(detached, other), Times.Once);
+        }
+
+        [TestMethod]
+        public void GetHashCode_UsesEqualityComparer()
+        {
+            var detached = new DetachedOutlookItem(CreateMockItem().Object);
+            var customComparer = new Mock<IEqualityComparer<IItem>>();
+            customComparer.Setup(c => c.GetHashCode(It.IsAny<IItem>())).Returns(42);
+
+            detached.EqualityComparer = customComparer.Object;
+
+            Assert.AreEqual(42, detached.GetHashCode());
+            customComparer.Verify(c => c.GetHashCode(detached), Times.Once);
+        }
+    }
+}
