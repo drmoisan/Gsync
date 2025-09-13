@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+	<defs>
+		<style>.canvas{fill: none; opacity: 0;}.light-defaultgrey-10{fill: #212121; opacity: 0.1;}.light-defaultgrey{fill: #212121; opacity: 1;}.light-yellow{fill: #996f00; opacity: 1;}.white{fill: #ffffff; opacity: 1;}.cls-1{opacity:0.75;}</style>
+	</defs>
+	<title>Warning</title>
+	<g id="canvas" class="canvas">
+		<path class="canvas" d="M16,16H0V0H16Z" />
+	</g>
+	<g id="level-1">
+		<path class="light-yellow" d="M15.102,15.181h-14.363l-.7882-1.327,7.181-13.036h1.576l7.181,13.036Z" />
+		<path class="white" d="M8.819,10.614h-1.795v-5.386h1.795Zm.449,2.693a1.347, 1.347,0,1,1, -1.347, -1.347a1.347, 1.347,0,0,1,1.347,1.347Z" />
+	</g>
+</svg>

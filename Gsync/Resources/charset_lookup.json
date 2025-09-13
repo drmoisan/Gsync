@@ -1,0 +1,172 @@
+[
+  {
+    "Name": "Arabic (ISO)",
+    "Charset": "iso-8859-6",
+    "Codepage": 28596
+  },
+  {
+    "Name": "Arabic (Windows)",
+    "Charset": "windows-1256",
+    "Codepage": 1256
+  },
+  {
+    "Name": "Baltic (ISO)",
+    "Charset": "iso-8859-4",
+    "Codepage": 28594
+  },
+  {
+    "Name": "Baltic (Windows)",
+    "Charset": "windows-1257",
+    "Codepage": 1257
+  },
+  {
+    "Name": "Central European (ISO)",
+    "Charset": "iso-8859-2",
+    "Codepage": 28592
+  },
+  {
+    "Name": "Central European (Windows)",
+    "Charset": "windows-1250",
+    "Codepage": 1250
+  },
+  {
+    "Name": "Chinese Simplified (GB2312)",
+    "Charset": "gb2312",
+    "Codepage": 936
+  },
+  {
+    "Name": "Chinese Simplified (HZ)",
+    "Charset": "hz-gb-2312",
+    "Codepage": 52936
+  },
+  {
+    "Name": "Chinese Traditional (Big5)",
+    "Charset": "big5",
+    "Codepage": 950
+  },
+  {
+    "Name": "Cyrillic (ISO)",
+    "Charset": "iso-8859-5",
+    "Codepage": 28595
+  },
+  {
+    "Name": "Cyrillic (KOI8-R)",
+    "Charset": "koi8-r",
+    "Codepage": 20866
+  },
+  {
+    "Name": "Cyrillic (KOI8-U)",
+    "Charset": "koi8-u",
+    "Codepage": 21866
+  },
+  {
+    "Name": "Cyrillic (Windows)",
+    "Charset": "windows-1251",
+    "Codepage": 1251
+  },
+  {
+    "Name": "Greek (ISO)",
+    "Charset": "iso-8859-7",
+    "Codepage": 28597
+  },
+  {
+    "Name": "Greek (Windows)",
+    "Charset": "windows-1253",
+    "Codepage": 1253
+  },
+  {
+    "Name": "Hebrew (ISO-Logical)",
+    "Charset": "iso-8859-8-i",
+    "Codepage": 38598
+  },
+  {
+    "Name": "Hebrew (Windows)",
+    "Charset": "windows-1255",
+    "Codepage": 1255
+  },
+  {
+    "Name": "Japanese (EUC)",
+    "Charset": "euc-jp",
+    "Codepage": 51932
+  },
+  {
+    "Name": "Japanese (JIS)",
+    "Charset": "iso-2022-jp",
+    "Codepage": 50220
+  },
+  {
+    "Name": "Japanese (JIS-Allow 1 byte Kana)",
+    "Charset": "csISO2022JP",
+    "Codepage": 50221
+  },
+  {
+    "Name": "Japanese (Shift-JIS)",
+    "Charset": "iso-2022-jp",
+    "Codepage": 932
+  },
+  {
+    "Name": "Korean",
+    "Charset": "ks_c_5601-1987",
+    "Codepage": 949
+  },
+  {
+    "Name": "Korean (EUC)",
+    "Charset": "euc-kr",
+    "Codepage": 51949
+  },
+  {
+    "Name": "Latin 3 (ISO)",
+    "Charset": "iso-8859-3",
+    "Codepage": 28593
+  },
+  {
+    "Name": "Latin 9 (ISO)",
+    "Charset": "iso-8859-15",
+    "Codepage": 28605
+  },
+  {
+    "Name": "Thai (Windows)",
+    "Charset": "windows-874",
+    "Codepage": 874
+  },
+  {
+    "Name": "Turkish (ISO)",
+    "Charset": "iso-8859-9",
+    "Codepage": 28599
+  },
+  {
+    "Name": "Turkish (Windows)",
+    "Charset": "windows-1254",
+    "Codepage": 1254
+  },
+  {
+    "Name": "Unicode (UTF-7)",
+    "Charset": "utf-7",
+    "Codepage": 65000
+  },
+  {
+    "Name": "Unicode (UTF-8)",
+    "Charset": "utf-8",
+    "Codepage": 65001
+  },
+  {
+    "Name": "US-ASCII",
+    "Charset": "us-ascii",
+    "Codepage": 20127
+  },
+  {
+    "Name": "Vietnamese (Windows)",
+    "Charset": "windows-1258",
+    "Codepage": 1258
+  },
+  {
+    "Name": "Western European (ISO)",
+    "Charset": "iso-8859-1",
+    "Codepage": 28591
+  },
+  {
+    "Name": "Western European (Windows)",
+    "Charset": "Windows-1252",
+    "Codepage": 1252
+  }
+]

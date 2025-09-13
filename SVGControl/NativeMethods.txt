@@ -1,0 +1,4 @@
+GetFullPathNameW
+GetMessage
+FormatMessageW
+GetLongPathNameW

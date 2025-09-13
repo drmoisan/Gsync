@@ -10,6 +10,7 @@
     <RootNamespace>Gsync.Test</RootNamespace>
     <AssemblyName>Gsync.Test</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <LangVersion>preview</LangVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
@@ -46,20 +47,74 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppGlobals\AppFileSystemFolderPathsTests.cs" />
     <Compile Include="ImapOutlookItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\DynamicMailItem.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\DetachedMailItemTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemEqualityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemSimilarityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\DynamicIItem.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemEqualityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\IItemSimilarityComparerTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemTypeTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\SetMemberBinderImpl.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\StubMailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\TestableMailItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\TestableOutlookItemLooseWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\TestableOutlookItemWrapper.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\OutlookItemLooseWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\MailItem\MailItemWrapperTests.cs" />
+    <Compile Include="OutlookInterop\Item\_OutlookItem\DetachedOutlookItemTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Dialogs\ActionButtonTests.cs" />
+    <Compile Include="Utilities\Extensions\CompilerServices\CallerArgumentExpressionAttributeTests.cs" />
+    <Compile Include="Utilities\GTD\ProgramDataTests.cs" />
+    <Compile Include="Utilities\GTD\ProjectElementTests.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\FilePathHelperConverterTests.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverterIntegrationTests.cs" />
+    <Compile Include="Utilities\HelperClasses\NewtonSoft\ScoDictionaryConverterUnitTests.cs" />
+    <Compile Include="Utilities\ReusableTypes\Concurrent\Observable\Dictionary\ConcurrentObservableDictionaryTests.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\FakeFileSystem.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Old\DummySerializable.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\Old\SmartSerializableTestsOld.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\SmartSerializableTests.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\TestableSmartSerializable.cs" />
+    <Compile Include="Utilities\ReusableTypes\SmartSerializable\TestConfig.cs" />
+    <Compile Include="Utilities\Threading\TestSyncContext.cs" />
+    <Compile Include="Utilities\Threading\ThreadSafeSingleShotGuardTests.cs" />
+    <Compile Include="Utilities\Threading\UiTaskTests.cs" />
+    <Compile Include="Utilities\Threading\UiWrapperTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FluentAssertions">
+      <Version>8.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Office.Interop.Outlook">
+      <Version>15.0.4797.1004</Version>
+    </PackageReference>
     <PackageReference Include="Moq">
       <Version>4.20.72</Version>
     </PackageReference>
     <PackageReference Include="MSTest.TestAdapter">
-      <Version>2.2.10</Version>
+      <Version>3.9.3</Version>
     </PackageReference>
     <PackageReference Include="MSTest.TestFramework">
-      <Version>2.2.10</Version>
+      <Version>3.9.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Memory">
+      <Version>4.6.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +122,12 @@
       <Project>{59968129-3dfd-464b-9ba9-be1db23becee}</Project>
       <Name>Gsync</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
