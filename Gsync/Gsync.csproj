@@ -378,6 +378,9 @@
       <DependentUpon>ThisAddIn.Designer.xml</DependentUpon>
     </Compile>
     <AppDesigner Include="Properties\" />
+    <None Include="Utilities\Developer\collect-commit-context.ps1" />
+    <None Include="Utilities\Developer\collect-pull-request-context.ps1" />
+    <None Include="Utilities\Developer\make_chat_gpt_bundle.ps1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="log4net">
